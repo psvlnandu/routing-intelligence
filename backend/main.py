@@ -3,20 +3,40 @@ FastAPI Backend for Route Optimization
 
 Provides REST API endpoints for running route optimization algorithms
 and returning results with visualization coordinates.
+
+Uses Google Maps API for real city data.
+Make sure GOOGLE_MAPS_API_KEY is set in .env or environment variables.
 """
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Dict
+from typing import List, Dict, Optional
 import sys
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Add backend directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
 
 from route_optimizer import RouteOptimizer
-from city_graph import city_graph
+from city_graph import initialize_city_graph
+
+# Initialize city graph with Google Maps API
+# This will check for cached data first, then fetch from API if needed
+print("Initializing city graph...")
+city_graph = None
+try:
+    city_graph = initialize_city_graph(use_cache=True)
+    print(f"✓ Initialized: {city_graph}")
+except Exception as e:
+    print(f"✗ Error initializing city graph: {e}")
+    print("\nMake sure GOOGLE_MAPS_API_KEY is set:")
+    print("  - Add to .env file: GOOGLE_MAPS_API_KEY=your_key_here")
+    print("  - Or set environment variable: export GOOGLE_MAPS_API_KEY=your_key_here")
 
 # Create FastAPI app
 app = FastAPI(
@@ -90,6 +110,11 @@ def get_path_coordinates(path: List[str]) -> List[Dict[str, float]]:
 @app.get("/")
 def read_root():
     """Root endpoint with API information."""
+    if city_graph is None:
+        return {
+            "error": "City graph not initialized",
+            "message": "Set GOOGLE_MAPS_API_KEY environment variable"
+        }
     return {
         "name": "Route Optimization API",
         "description": "Compare A*, UCS, and Greedy pathfinding algorithms",
@@ -104,12 +129,23 @@ def read_root():
 @app.get("/health")
 def health_check():
     """Health check endpoint."""
+    if city_graph is None:
+        return {
+            "status": "error",
+            "message": "City graph not initialized",
+            "version": "1.0.0"
+        }
     return {"status": "healthy", "version": "1.0.0"}
 
 
 @app.get("/cities")
 def list_cities():
     """Get list of all available cities."""
+    if city_graph is None:
+        raise HTTPException(
+            status_code=500,
+            detail="City graph not initialized. Set GOOGLE_MAPS_API_KEY environment variable."
+        )
     cities = sorted(city_graph.get_all_cities())
     return {
         "cities": cities,
@@ -130,6 +166,12 @@ def find_routes(request: RouteRequest):
     Returns:
         RouteResponse with results from all three algorithms
     """
+    if city_graph is None:
+        raise HTTPException(
+            status_code=500,
+            detail="City graph not initialized. Set GOOGLE_MAPS_API_KEY environment variable."
+        )
+    
     initial_city = request.initial_city.strip()
     goal_city = request.goal_city.strip()
     

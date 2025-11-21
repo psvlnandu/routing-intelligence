@@ -1,119 +1,227 @@
 """
-NYC Metropolitan Route Optimization - City Data
+NYC Metropolitan Route Optimization - City Data with Google Maps API
 
-This module contains the city graph for New York State with:
-- City names and geographic coordinates (lat, long)
-- Direct connections between cities
-- Approximate driving distances between connected cities
-- Haversine distance calculation for A* heuristic
+This module creates a city graph for New York State using Google Maps API:
+- Fetches real city coordinates using Geocoding API
+- Calculates real driving distances using Distance Matrix API
+- Creates a graph of cities with realistic road networks
 
-Cities are represented as nodes in an undirected graph.
-A state in this problem is simply a city name (string).
+Requires a Google Maps API key with:
+  - Geocoding API enabled
+  - Distance Matrix API enabled
+  - Maps SDK enabled
+
+Set your API key as environment variable:
+  export GOOGLE_MAPS_API_KEY="your_api_key_here"
+
+Or add to .env file:
+  GOOGLE_MAPS_API_KEY=your_api_key_here
 """
 
+import os
 import math
-from typing import Dict, Tuple
+import json
+from typing import Dict, Tuple, Optional
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+try:
+    import googlemaps
+except ImportError:
+    print("ERROR: googlemaps not installed. Run: pip install googlemaps")
+    googlemaps = None
 
 
 class CityGraph:
     """
-    Represents New York State cities as a graph.
+    Represents New York State cities as a graph using Google Maps API.
+    
+    Uses Google Maps Geocoding API to get coordinates and Distance Matrix API
+    to get real driving distances.
     
     Attributes:
+        api_key: Google Maps API key
+        gmaps: Google Maps client
         cities: Dict mapping city names to (latitude, longitude) tuples
         graph: Dict mapping city names to dicts of neighbors and distances
-        directed: Boolean indicating if graph is directed (False for undirected)
+        cache_file: JSON file for caching API results (to avoid rate limits)
     """
     
-    def __init__(self):
-        """Initialize the NY State city graph with coordinates and connections."""
+    def __init__(self, api_key: Optional[str] = None, use_cache: bool = True):
+        """
+        Initialize the NY State city graph with Google Maps API.
         
-        # City coordinates (latitude, longitude) - approximate
-        self.cities = {
-            "Buffalo": (42.8864, -78.8784),
-            "Niagara Falls": (43.0896, -79.0849),
-            "Rochester": (43.1629, -77.6111),
-            "Syracuse": (43.0481, -76.1474),
-            "Utica": (43.1010, -75.2231),
-            "Binghamton": (42.0987, -75.9180),
-            "Albany": (42.6526, -73.7562),
-            "Schenectady": (42.8142, -73.9396),
-            "Glens Falls": (43.3196, -73.6433),
-            "Plattsburgh": (44.7597, -73.4570),
-            "Watertown": (43.9747, -75.9108),
-            "Oswego": (43.4673, -76.5107),
-            "Ithaca": (42.4534, -76.4735),
-            "Elmira": (42.1105, -76.8073),
-            "Corning": (42.1407, -77.0508),
-            "Olean": (42.0823, -78.4305),
-            "Batavia": (42.9861, -78.1848),
-            "NYC": (40.7128, -74.0060),
-            "Yonkers": (40.8448, -73.8648),
-            "New Rochelle": (40.8819, -73.7878),
-            "Kingston": (41.9276, -74.0149),
-        }
+        Args:
+            api_key: Google Maps API key. If None, reads from GOOGLE_MAPS_API_KEY env var
+            use_cache: If True, loads cached results to avoid API calls
         
-        # Build the graph: city -> {neighbor: distance}
-        # Distances are approximate driving distances in miles
+        Raises:
+            ValueError: If API key not provided and not in environment
+        """
+        
+        # Get API key
+        if api_key is None:
+            api_key = os.getenv("GOOGLE_MAPS_API_KEY")
+        
+        if not api_key:
+            raise ValueError(
+                "Google Maps API key not found. Set GOOGLE_MAPS_API_KEY environment variable "
+                "or pass api_key parameter."
+            )
+        
+        self.api_key = api_key
+        self.cache_file = "city_graph_cache.json"
+        self.cities = {}
         self.graph = {}
-        self._initialize_graph()
-        
         self.directed = False
-    
-    def _initialize_graph(self):
-        """Initialize graph connections with approximate driving distances."""
         
-        # Define connections as (city1, city2, distance_in_miles)
-        connections = [
-            # Western NY
-            ("Buffalo", "Niagara Falls", 25),
-            ("Buffalo", "Rochester", 85),
-            ("Buffalo", "Batavia", 35),
-            ("Niagara Falls", "Batavia", 55),
+        # Try to load from cache first
+        if use_cache and os.path.exists(self.cache_file):
+            print(f"Loading cached city data from {self.cache_file}...")
+            self._load_from_cache()
+        else:
+            print("Initializing Google Maps client...")
+            if googlemaps is None:
+                raise ImportError("googlemaps library required. Run: pip install googlemaps")
             
-            # Central NY
-            ("Rochester", "Syracuse", 85),
-            ("Rochester", "Batavia", 50),
-            ("Syracuse", "Utica", 50),
-            ("Syracuse", "Albany", 170),
-            ("Syracuse", "Oswego", 35),
-            ("Oswego", "Utica", 90),
-            
-            # Southern Tier
-            ("Binghamton", "Utica", 120),
-            ("Binghamton", "Ithaca", 75),
-            ("Ithaca", "Elmira", 70),
-            ("Elmira", "Corning", 30),
-            ("Corning", "Olean", 90),
-            ("Olean", "Buffalo", 100),
-            
-            # Eastern NY
-            ("Schenectady", "Albany", 15),
-            ("Glens Falls", "Albany", 60),
-            ("Glens Falls", "Plattsburgh", 100),
-            ("Watertown", "Plattsburgh", 130),
-            ("Plattsburgh", "Schenectady", 250),
-            
-            # Downstate
-            ("NYC", "Yonkers", 20),
-            ("NYC", "New Rochelle", 25),
-            ("NYC", "Kingston", 90),
-            ("Kingston", "Albany", 90),
-            ("Yonkers", "New Rochelle", 20),
-            
-            # Connectors
-            ("Albany", "Utica", 90),
-            ("Kingston", "Schenectady", 110),
+            self.gmaps = googlemaps.Client(key=api_key)
+            print("Fetching city coordinates and distances from Google Maps API...")
+            self._initialize_from_api()
+            self._save_to_cache()
+    
+    def _load_from_cache(self):
+        """Load cached city and graph data from JSON file."""
+        try:
+            with open(self.cache_file, 'r') as f:
+                data = json.load(f)
+                self.cities = data.get("cities", {})
+                self.graph = data.get("graph", {})
+            print(f"✓ Loaded {len(self.cities)} cities from cache")
+        except Exception as e:
+            print(f"Error loading cache: {e}. Will fetch fresh data.")
+            self.cities = {}
+            self.graph = {}
+    
+    def _save_to_cache(self):
+        """Save city and graph data to JSON file for future use."""
+        try:
+            data = {
+                "cities": self.cities,
+                "graph": self.graph
+            }
+            with open(self.cache_file, 'w') as f:
+                json.dump(data, f, indent=2)
+            print(f"✓ Saved city data to {self.cache_file}")
+        except Exception as e:
+            print(f"Warning: Could not save cache: {e}")
+    
+    def _initialize_from_api(self):
+        """Fetch city coordinates and distances from Google Maps API."""
+        
+        # List of NY State cities to include
+        ny_cities = [
+            "Buffalo, NY",
+            "Rochester, NY",
+            "Syracuse, NY",
+            "Albany, NY",
+            "New York City, NY",
+            "Yonkers, NY",
+            "Niagara Falls, NY",
+            "Utica, NY",
+            "Schenectady, NY",
+            "Glens Falls, NY",
+            "Plattsburgh, NY",
+            "Watertown, NY",
+            "Oswego, NY",
+            "Ithaca, NY",
+            "Binghamton, NY",
+            "Elmira, NY",
+            "Corning, NY",
+            "Olean, NY",
+            "Batavia, NY",
+            "Kingston, NY",
+            "New Rochelle, NY",
         ]
         
-        # Initialize all cities with empty neighbor dicts
-        for city in self.cities:
+        # Fetch coordinates for each city
+        print("Geocoding cities...")
+        for city_full in ny_cities:
+            try:
+                # Extract short name (e.g., "Buffalo" from "Buffalo, NY")
+                city_name = city_full.split(",")[0]
+                
+                # Geocode the city
+                geocode_result = self.gmaps.geocode(city_full)
+                
+                if geocode_result:
+                    location = geocode_result[0]['geometry']['location']
+                    lat, lng = location['lat'], location['lng']
+                    self.cities[city_name] = (lat, lng)
+                    print(f"  ✓ {city_name}: ({lat:.4f}, {lng:.4f})")
+                else:
+                    print(f"  ✗ {city_name}: Not found")
+            
+            except Exception as e:
+                print(f"  ✗ {city_name}: Error - {e}")
+        
+        # Initialize graph structure
+        city_list = list(self.cities.keys())
+        for city in city_list:
             self.graph[city] = {}
         
-        # Add connections (bidirectional for undirected graph)
-        for city1, city2, distance in connections:
-            self.graph[city1][city2] = distance
-            self.graph[city2][city1] = distance  # Undirected graph
+        # Fetch distances between cities using Distance Matrix API
+        print("\nFetching distances between cities...")
+        self._fetch_distances(city_list)
+    
+    def _fetch_distances(self, cities: list):
+        """
+        Fetch driving distances between cities using Google Distance Matrix API.
+        
+        The Distance Matrix API allows up to 25 origins × 25 destinations per request.
+        """
+        
+        # Distance Matrix API limit: 25x25
+        batch_size = 10
+        
+        for i in range(0, len(cities), batch_size):
+            origins = cities[i:i+batch_size]
+            destinations = cities[i:i+batch_size]
+            
+            try:
+                # Call Distance Matrix API
+                result = self.gmaps.distance_matrix(
+                    origins=origins,
+                    destinations=destinations,
+                    mode="driving",
+                    units="imperial"  # Miles
+                )
+                
+                # Parse results
+                for origin_idx, origin in enumerate(origins):
+                    for dest_idx, destination in enumerate(destinations):
+                        if origin != destination:
+                            try:
+                                element = result['rows'][origin_idx]['elements'][dest_idx]
+                                
+                                if element['status'] == 'OK':
+                                    # Distance in miles
+                                    distance = element['distance']['value'] / 1609.34
+                                    
+                                    # Only add edge if not already present (undirected)
+                                    if destination not in self.graph[origin]:
+                                        self.graph[origin][destination] = distance
+                                    
+                                    print(f"  {origin} → {destination}: {distance:.0f} miles")
+                                else:
+                                    print(f"  ✗ {origin} → {destination}: {element['status']}")
+                            
+                            except (KeyError, IndexError) as e:
+                                print(f"  ✗ Error parsing distance for {origin} → {destination}")
+            
+            except Exception as e:
+                print(f"Error fetching distances: {e}")
     
     def get_neighbors(self, city: str) -> Dict[str, float]:
         """
@@ -127,7 +235,7 @@ class CityGraph:
         """
         return self.graph.get(city, {})
     
-    def get_distance(self, city1: str, city2: str) -> float:
+    def get_distance(self, city1: str, city2: str) -> Optional[float]:
         """
         Get direct distance between two connected cities.
         
@@ -140,7 +248,7 @@ class CityGraph:
         """
         return self.graph.get(city1, {}).get(city2, None)
     
-    def get_coordinates(self, city: str) -> Tuple[float, float]:
+    def get_coordinates(self, city: str) -> Optional[Tuple[float, float]]:
         """
         Get latitude and longitude coordinates for a city.
         
@@ -192,7 +300,34 @@ class CityGraph:
     def get_all_cities(self):
         """Return list of all cities in the graph."""
         return list(self.cities.keys())
+    
+    def __repr__(self):
+        """String representation showing number of cities and edges."""
+        num_edges = sum(len(neighbors) for neighbors in self.graph.values()) // 2
+        return f"CityGraph({len(self.cities)} cities, {num_edges} connections)"
 
 
-# Create a singleton instance for use throughout the application
-city_graph = CityGraph()
+# Singleton instance for use throughout the application
+# Note: This will only be created when explicitly imported and initialized
+city_graph = None
+
+
+def initialize_city_graph(api_key: Optional[str] = None, use_cache: bool = True) -> CityGraph:
+    """
+    Initialize the global city graph instance.
+    
+    Args:
+        api_key: Google Maps API key (optional, reads from environment if not provided)
+        use_cache: Use cached data if available
+    
+    Returns:
+        Initialized CityGraph instance
+    
+    Example:
+        >>> from city_graph import initialize_city_graph
+        >>> graph = initialize_city_graph()
+        >>> print(graph)
+    """
+    global city_graph
+    city_graph = CityGraph(api_key=api_key, use_cache=use_cache)
+    return city_graph

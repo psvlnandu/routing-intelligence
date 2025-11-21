@@ -2,10 +2,14 @@
 Simple test script to verify the route optimization algorithms work.
 
 Run this with: python test_algorithms.py
+
+This will use the Google Maps API to fetch real city data.
+Make sure GOOGLE_MAPS_API_KEY is set in .env or environment variables.
 """
 
 from route_optimizer import RouteOptimizer
-from city_graph import city_graph
+from city_graph import initialize_city_graph
+import os
 
 
 def print_result(result):
@@ -32,54 +36,78 @@ def main():
     print("ROUTE OPTIMIZATION - ALGORITHM COMPARISON")
     print("="*60)
     
+    # Initialize city graph with Google Maps API
+    print("\nInitializing city graph...")
+    try:
+        city_graph = initialize_city_graph(use_cache=True)
+        # print(f"✓ {city_graph}")
+    except Exception as e:
+        print(f"✗ Error initializing city graph: {e}")
+        print("\nMake sure GOOGLE_MAPS_API_KEY is set:")
+        print("  - Add to .env file: GOOGLE_MAPS_API_KEY=your_key_here")
+        print("  - Or set environment variable: export GOOGLE_MAPS_API_KEY=your_key_here")
+        return
+    
     print("\nAvailable cities:")
     cities = city_graph.get_all_cities()
-    for i, city in enumerate(sorted(cities), 1):
-        print(f"  {i:2d}. {city}")
+    # for i, city in enumerate(sorted(cities), 1):
+    #     print(f"  {i:2d}. {city}")
     
     # Test route 1: Buffalo to NYC
     print("\n" + "="*80)
     print("TEST 1: Buffalo → NYC")
     print("="*80)
     
-    results = RouteOptimizer.run_all_algorithms("Buffalo", "NYC")
+    try:
+        results = RouteOptimizer.run_all_algorithms("Buffalo", "New York City")
+        
+        for algo in ["ucs", "astar", "greedy"]:
+            print_result(results[algo])
+        
+        # Compare results
+        print(f"\n{'='*60}")
+        print("COMPARISON")
+        print(f"{'='*60}")
+        
+        ucs_result = results["ucs"]
+        astar_result = results["astar"]
+        greedy_result = results["greedy"]
+        
+        if ucs_result.success and astar_result.success:
+            print(f"A* Nodes Expanded: {astar_result.nodes_expanded} "
+                  f"(vs UCS: {ucs_result.nodes_expanded})")
+            if ucs_result.nodes_expanded > 0:
+                reduction = ((ucs_result.nodes_expanded - astar_result.nodes_expanded) / 
+                           ucs_result.nodes_expanded) * 100
+                print(f"  → A* saved {ucs_result.nodes_expanded - astar_result.nodes_expanded} "
+                      f"node expansions ({reduction:.1f}% reduction)")
+        
+        if greedy_result.success and astar_result.success:
+            if greedy_result.path_cost > astar_result.path_cost:
+                excess = greedy_result.path_cost - astar_result.path_cost
+                excess_pct = (excess / astar_result.path_cost) * 100
+                print(f"Greedy Path: {greedy_result.path_cost:.2f} miles "
+                      f"(vs A* optimal: {astar_result.path_cost:.2f} miles)")
+                print(f"  → Greedy is suboptimal by {excess:.2f} miles ({excess_pct:.1f}% worse)")
+            else:
+                print(f"Greedy found optimal path!")
     
-    for algo in ["ucs", "astar", "greedy"]:
-        print_result(results[algo])
-    
-    # Compare results
-    print(f"\n{'='*60}")
-    print("COMPARISON")
-    print(f"{'='*60}")
-    
-    ucs_result = results["ucs"]
-    astar_result = results["astar"]
-    greedy_result = results["greedy"]
-    
-    if ucs_result.success and astar_result.success:
-        print(f"A* Nodes Expanded: {astar_result.nodes_expanded} "
-              f"(vs UCS: {ucs_result.nodes_expanded})")
-        print(f"  → A* saved {ucs_result.nodes_expanded - astar_result.nodes_expanded} "
-              f"node expansions "
-              f"({((1 - astar_result.nodes_expanded/ucs_result.nodes_expanded)*100):.1f}% reduction)")
-    
-    if greedy_result.success and astar_result.success:
-        if greedy_result.path_cost > astar_result.path_cost:
-            print(f"Greedy Path: {greedy_result.path_cost:.2f} miles "
-                  f"(vs A* optimal: {astar_result.path_cost:.2f} miles)")
-            print(f"  → Greedy is suboptimal by {greedy_result.path_cost - astar_result.path_cost:.2f} miles")
-        else:
-            print(f"Greedy found optimal path!")
+    except Exception as e:
+        print(f"Error in test 1: {e}")
     
     # Test route 2: Rochester to Albany
     print("\n" + "="*80)
     print("TEST 2: Rochester → Albany")
     print("="*80)
     
-    results2 = RouteOptimizer.run_all_algorithms("Rochester", "Albany")
+    try:
+        results2 = RouteOptimizer.run_all_algorithms("Rochester", "Albany")
+        
+        for algo in ["ucs", "astar", "greedy"]:
+            print_result(results2[algo])
     
-    for algo in ["ucs", "astar", "greedy"]:
-        print_result(results2[algo])
+    except Exception as e:
+        print(f"Error in test 2: {e}")
     
     print("\n" + "="*60)
     print("✓ All tests completed!")
