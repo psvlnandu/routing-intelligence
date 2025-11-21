@@ -81,7 +81,7 @@ def get_cities(api_url):
         return []
 
 cities = get_cities(api_url)
-
+print(cities)
 if not cities:
     st.error("❌ Cannot connect to backend.")
     st.info("""

@@ -15,10 +15,11 @@ import time
 import sys
 import os
 
+
 # Import from professor's search framework
 # Make sure search.py and utils.py are in the same directory
 try:
-    from search import (
+    from graph.search import (
         Node, 
         uniform_cost_search,
         astar_search,
@@ -30,7 +31,7 @@ except ImportError as e:
     print(f"Error details: {e}")
     sys.exit(1)
 
-from route_problem import RouteOptimizationProblem
+from graph.route_problem import RouteOptimizationProblem
 
 
 class AlgorithmResult:

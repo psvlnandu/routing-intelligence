@@ -20,10 +20,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Add backend directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend', 'graph'))
 
-from route_optimizer import RouteOptimizer
-from city_graph import initialize_city_graph
+from graph.route_optimizer import RouteOptimizer
+from graph.city_graph import initialize_city_graph
 
 # Initialize city graph with Google Maps API
 # This will check for cached data first, then fetch from API if needed
