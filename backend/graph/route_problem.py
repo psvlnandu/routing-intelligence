@@ -11,11 +11,9 @@ The problem:
 - Initial state: Starting city (string)
 - Goal state: Destination city (string)
 - Actions: Move to any neighboring city
-- Path cost: Sum of driving distances
+- Path cost: Sum of driving distances (from Google Maps Distance Matrix API)
 - Heuristic: Straight-line distance to goal (Haversine)
 """
-
-from city_graph import city_graph
 
 
 class RouteOptimizationProblem:
@@ -28,20 +26,27 @@ class RouteOptimizationProblem:
     Attributes:
         initial: Starting city name (string)
         goal: Destination city name (string)
-        graph: Reference to the CityGraph object
+        graph: Reference to the CityGraph object (passed in, not global)
     """
     
-    def __init__(self, initial, goal):
+    def __init__(self, initial, goal, graph):
         """
         Initialize the route optimization problem.
         
         Args:
             initial: Starting city name (e.g., "Buffalo")
-            goal: Destination city name (e.g., "NYC")
+            goal: Destination city name (e.g., "New York City")
+            graph: Initialized CityGraph object
+        
+        Raises:
+            ValueError: If cities not found in graph
         """
         self.initial = initial
         self.goal = goal
-        self.graph = city_graph
+        self.graph = graph
+        
+        if self.graph is None:
+            raise ValueError("CityGraph not initialized. Initialize with city_graph = initialize_city_graph()")
         
         # Validate cities exist
         valid_cities = self.graph.get_all_cities()
@@ -97,7 +102,7 @@ class RouteOptimizationProblem:
         """
         Calculate the cost of moving from current_city to next_city.
         
-        The cost is the driving distance between the two cities.
+        The cost is the driving distance between the two cities (from Google Maps).
         
         Args:
             cost_so_far: Cumulative cost to reach current_city (float)

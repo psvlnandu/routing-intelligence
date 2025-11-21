@@ -40,7 +40,7 @@ def main():
     print("\nInitializing city graph...")
     try:
         city_graph = initialize_city_graph(use_cache=True)
-        # print(f"✓ {city_graph}")
+        print(f"✓ {city_graph}")
     except Exception as e:
         print(f"✗ Error initializing city graph: {e}")
         print("\nMake sure GOOGLE_MAPS_API_KEY is set:")
@@ -50,8 +50,8 @@ def main():
     
     print("\nAvailable cities:")
     cities = city_graph.get_all_cities()
-    # for i, city in enumerate(sorted(cities), 1):
-    #     print(f"  {i:2d}. {city}")
+    for i, city in enumerate(sorted(cities), 1):
+        print(f"  {i:2d}. {city}")
     
     # Test route 1: Buffalo to NYC
     print("\n" + "="*80)
@@ -59,7 +59,7 @@ def main():
     print("="*80)
     
     try:
-        results = RouteOptimizer.run_all_algorithms("Buffalo", "New York City")
+        results = RouteOptimizer.run_all_algorithms("Buffalo", "New York City", city_graph)
         
         for algo in ["ucs", "astar", "greedy"]:
             print_result(results[algo])
@@ -101,7 +101,7 @@ def main():
     print("="*80)
     
     try:
-        results2 = RouteOptimizer.run_all_algorithms("Rochester", "Albany")
+        results2 = RouteOptimizer.run_all_algorithms("Rochester", "Albany", city_graph)
         
         for algo in ["ucs", "astar", "greedy"]:
             print_result(results2[algo])
