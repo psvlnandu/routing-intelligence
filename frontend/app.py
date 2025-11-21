@@ -4,6 +4,8 @@ Route Optimization Visualizer - Streamlit Frontend
 A web app that visualizes how UCS, A*, and Greedy Best-First search
 explore different regions of New York State to find optimal routes.
 
+Uses Google Maps API for real city data.
+
 Run with: streamlit run app.py
 """
 
@@ -48,7 +50,7 @@ st.markdown("""
 st.title("🗺️ Route Optimization: AI Algorithm Comparison")
 
 st.markdown("""
-This project compares three pathfinding algorithms on real NY State cities:
+This project compares three pathfinding algorithms on **real NY State cities** (powered by Google Maps API):
 
 - **UCS (Uniform Cost Search)**: Like Dijkstra's algorithm. Guarantees optimal path.
 - **A* Search**: Uses a heuristic (straight-line distance) to guide search. Optimal AND more efficient.
@@ -69,19 +71,38 @@ api_url = st.sidebar.text_input(
 
 # Get list of cities
 @st.cache_data
-def get_cities():
+def get_cities(api_url):
     try:
         response = requests.get(f"{api_url}/cities", timeout=5)
         if response.status_code == 200:
             return sorted(response.json()["cities"])
     except Exception as e:
-        st.error(f"Cannot connect to API: {e}")
-    return []
+        st.sidebar.error(f"Cannot connect to API: {e}")
+        return []
 
-cities = get_cities()
+cities = get_cities(api_url)
 
 if not cities:
-    st.error("❌ Cannot connect to backend. Make sure to run: `python main.py`")
+    st.error("❌ Cannot connect to backend.")
+    st.info("""
+    **How to fix:**
+    
+    1. Make sure you have Google Maps API key set up:
+       - Read: `GOOGLE_MAPS_SETUP.md`
+       - Copy `.env.example` to `.env`
+       - Add your API key to `.env`
+    
+    2. Start the backend in a terminal:
+       ```
+       pip install -r requirements.txt
+       python main.py
+       ```
+    
+    3. Then run this Streamlit app:
+       ```
+       streamlit run app.py
+       ```
+    """)
     st.stop()
 
 # City selection
@@ -90,7 +111,7 @@ with col1:
     initial_city = st.selectbox(
         "📍 From:",
         cities,
-        index=3 if len(cities) > 3 else 0,  # Default to Buffalo if available
+        index=0,
         key="initial"
     )
 
@@ -98,7 +119,7 @@ with col2:
     goal_city = st.selectbox(
         "📍 To:",
         cities,
-        index=9 if len(cities) > 9 else 0,  # Default to NYC if available
+        index=min(10, len(cities)-1),
         key="goal"
     )
 
@@ -123,10 +144,18 @@ if st.sidebar.button("🔍 Find Routes", use_container_width=True, type="primary
                 data = response.json()
                 st.session_state.last_result = data
             else:
-                st.error(f"API Error: {response.json().get('detail', 'Unknown error')}")
+                error_detail = response.json().get('detail', 'Unknown error')
+                st.error(f"API Error: {error_detail}")
         
         except requests.exceptions.ConnectionError:
-            st.error("❌ Cannot connect to backend. Run: `python main.py`")
+            st.error("""
+            ❌ Cannot connect to backend. 
+            
+            Make sure to run in terminal:
+            ```
+            python main.py
+            ```
+            """)
         except Exception as e:
             st.error(f"❌ Error: {str(e)}")
 
@@ -333,6 +362,7 @@ with st.sidebar:
     2. **Heuristics**: Using domain knowledge (straight-line distance) to guide search
     3. **Algorithm Efficiency**: Trading optimality for speed
     4. **Empirical Analysis**: Measuring and comparing algorithm performance
+    5. **API Integration**: Using Google Maps for real geographic data
     
     **Why A* Wins:**
     - Uses heuristic to prioritize promising paths
