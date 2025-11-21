@@ -138,19 +138,20 @@ def health_check():
     return {"status": "healthy", "version": "1.0.0"}
 
 
-@app.get("/cities")
-def list_cities():
-    """Get list of all available cities."""
-    if city_graph is None:
-        raise HTTPException(
-            status_code=500,
-            detail="City graph not initialized. Set GOOGLE_MAPS_API_KEY environment variable."
-        )
-    cities = sorted(city_graph.get_all_cities())
-    return {
-        "cities": cities,
-        "count": len(cities)
-    }
+# @app.get("/cities")
+# def list_cities():
+#     """Get list of all available cities."""
+#     if city_graph is None:
+#         raise HTTPException(
+#             status_code=500,
+#             detail="City graph not initialized. Set GOOGLE_MAPS_API_KEY environment variable."
+#         )
+#     cities = sorted(city_graph.get_all_cities())
+#     return {
+#         "cities": cities,
+#         "count": len(cities)
+#     }
+
 
 
 @app.post("/routes", response_model=RouteResponse)
@@ -158,7 +159,7 @@ def find_routes(request: RouteRequest):
     """
     Find routes between two cities using all three algorithms.
     
-    Compare UCS (Dijkstra), A*, and Greedy Best-First search.
+    Automatically geocodes cities if they don't exist yet.
     
     Args:
         request: RouteRequest with initial_city and goal_city
@@ -175,32 +176,48 @@ def find_routes(request: RouteRequest):
     initial_city = request.initial_city.strip()
     goal_city = request.goal_city.strip()
     
-    # Validate cities
-    valid_cities = city_graph.get_all_cities()
-    if initial_city not in valid_cities:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Initial city '{initial_city}' not found"
-        )
-    if goal_city not in valid_cities:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Goal city '{goal_city}' not found"
-        )
-    
     if initial_city == goal_city:
         raise HTTPException(
             status_code=400,
             detail="Initial and goal cities must be different"
         )
     
-    # Run all algorithms
     try:
-        results = RouteOptimizer.run_all_algorithms(initial_city, goal_city)
+        # Add cities if they don't exist yet (geocode them)
+        if initial_city not in city_graph.get_all_cities():
+            print(f"Geocoding {initial_city}...")
+            city_graph.add_city(initial_city)
+        
+        if goal_city not in city_graph.get_all_cities():
+            print(f"Geocoding {goal_city}...")
+            city_graph.add_city(goal_city)
+        
+        # Verify cities were added successfully
+        if initial_city not in city_graph.get_all_cities():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Could not find coordinates for '{initial_city}'"
+            )
+        if goal_city not in city_graph.get_all_cities():
+            raise HTTPException(
+                status_code=400,
+                detail=f"Could not find coordinates for '{goal_city}'"
+            )
+        
+        # Add connection between cities if it doesn't exist
+        if goal_city not in city_graph.get_neighbors(initial_city):
+            print(f"Getting distance between {initial_city} and {goal_city}...")
+            city_graph.connect_cities(initial_city, goal_city)
+        
+        # Run algorithms
+        results = RouteOptimizer.run_all_algorithms(initial_city, goal_city, city_graph)
+        
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Error running algorithms: {str(e)}"
+            detail=f"Error processing route: {str(e)}"
         )
     
     # Format results
@@ -223,7 +240,6 @@ def find_routes(request: RouteRequest):
         goal_coordinates=get_city_coordinates(goal_city),
         results=formatted_results
     )
-
 
 @app.get("/routes/{initial}/{goal}")
 def find_routes_get(initial: str, goal: str):

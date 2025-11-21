@@ -59,7 +59,7 @@ def main():
     print("="*80)
     
     try:
-        results = RouteOptimizer.run_all_algorithms("Buffalo", "New York City", city_graph)
+        results = RouteOptimizer.run_all_algorithms("Potsdam", "New York City", city_graph)
         
         for algo in ["ucs", "astar", "greedy"]:
             print_result(results[algo])

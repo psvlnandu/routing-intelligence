@@ -72,56 +72,25 @@ api_url = st.sidebar.text_input(
 # Get list of cities
 @st.cache_data
 def get_cities(api_url):
-    try:
-        response = requests.get(f"{api_url}/cities", timeout=5)
-        if response.status_code == 200:
-            return sorted(response.json()["cities"])
-    except Exception as e:
-        st.sidebar.error(f"Cannot connect to API: {e}")
-        return []
+    # try:
+    #     response = requests.get(f"{api_url}/cities", timeout=5)
+    #     if response.status_code == 200:
+    #         return sorted(response.json()["cities"])
+    # except Exception as e:
+    #     st.sidebar.error(f"Cannot connect to API: {e}")
+    #     return []
+    return[]
 
 cities = get_cities(api_url)
-print(cities)
-if not cities:
-    st.error("❌ Cannot connect to backend.")
-    st.info("""
-    **How to fix:**
-    
-    1. Make sure you have Google Maps API key set up:
-       - Read: `GOOGLE_MAPS_SETUP.md`
-       - Copy `.env.example` to `.env`
-       - Add your API key to `.env`
-    
-    2. Start the backend in a terminal:
-       ```
-       pip install -r requirements.txt
-       python main.py
-       ```
-    
-    3. Then run this Streamlit app:
-       ```
-       streamlit run app.py
-       ```
-    """)
-    st.stop()
 
-# City selection
+# Allow free text input for any city in the world
 col1, col2 = st.sidebar.columns(2)
 with col1:
-    initial_city = st.selectbox(
-        "📍 From:",
-        cities,
-        index=0,
-        key="initial"
-    )
-
+    initial_city = st.text_input("📍 From:", value="Potsdam, NY", placeholder="Enter city name")
 with col2:
-    goal_city = st.selectbox(
-        "📍 To:",
-        cities,
-        index=min(10, len(cities)-1),
-        key="goal"
-    )
+    goal_city = st.text_input("📍 To:", value="Houston, TX", placeholder="Enter city name")
+
+
 
 # Find routes button
 if st.sidebar.button("🔍 Find Routes", use_container_width=True, type="primary"):

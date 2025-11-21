@@ -117,64 +117,115 @@ class CityGraph:
         except Exception as e:
             print(f"Warning: Could not save cache: {e}")
     
-    def _initialize_from_api(self):
-        """Fetch city coordinates and distances from Google Maps API."""
+    # def _initialize_from_api(self):
+    #     """Fetch city coordinates and distances from Google Maps API."""
         
-        # List of NY State cities to include
-        ny_cities = [
-            "Buffalo, NY",
-            "Rochester, NY",
-            "Syracuse, NY",
-            "Albany, NY",
-            "New York City, NY",
-            "Yonkers, NY",
-            "Niagara Falls, NY",
-            "Utica, NY",
-            "Schenectady, NY",
-            "Glens Falls, NY",
-            "Plattsburgh, NY",
-            "Watertown, NY",
-            "Oswego, NY",
-            "Ithaca, NY",
-            "Binghamton, NY",
-            "Elmira, NY",
-            "Corning, NY",
-            "Olean, NY",
-            "Batavia, NY",
-            "Kingston, NY",
-            "New Rochelle, NY",
-        ]
+    #     # List of NY State cities to include
+    #     ny_cities = [
+    #         "Buffalo, NY",
+    #         "Rochester, NY",
+    #         "Syracuse, NY",
+    #         "Albany, NY",
+    #         "New York City, NY",
+    #         "Yonkers, NY",
+    #         "Niagara Falls, NY",
+    #         "Utica, NY",
+    #         "Schenectady, NY",
+    #         "Glens Falls, NY",
+    #         "Plattsburgh, NY",
+    #         "Watertown, NY",
+    #         "Oswego, NY",
+    #         "Ithaca, NY",
+    #         "Binghamton, NY",
+    #         "Elmira, NY",
+    #         "Corning, NY",
+    #         "Olean, NY",
+    #         "Batavia, NY",
+    #         "Kingston, NY",
+    #         "New Rochelle, NY",
+    #     ]
         
-        # Fetch coordinates for each city
-        print("Geocoding cities...")
-        for city_full in ny_cities:
-            try:
-                # Extract short name (e.g., "Buffalo" from "Buffalo, NY")
-                city_name = city_full.split(",")[0]
+    #     # Fetch coordinates for each city
+    #     print("Geocoding cities...")
+    #     for city_full in ny_cities:
+    #         try:
+    #             # Extract short name (e.g., "Buffalo" from "Buffalo, NY")
+    #             city_name = city_full.split(",")[0]
                 
-                # Geocode the city
-                geocode_result = self.gmaps.geocode(city_full)
+    #             # Geocode the city
+    #             geocode_result = self.gmaps.geocode(city_full)
                 
-                if geocode_result:
-                    location = geocode_result[0]['geometry']['location']
-                    lat, lng = location['lat'], location['lng']
-                    self.cities[city_name] = (lat, lng)
-                    print(f"  ✓ {city_name}: ({lat:.4f}, {lng:.4f})")
-                else:
-                    print(f"  ✗ {city_name}: Not found")
+    #             if geocode_result:
+    #                 location = geocode_result[0]['geometry']['location']
+    #                 lat, lng = location['lat'], location['lng']
+    #                 self.cities[city_name] = (lat, lng)
+    #                 print(f"  ✓ {city_name}: ({lat:.4f}, {lng:.4f})")
+    #             else:
+    #                 print(f"  ✗ {city_name}: Not found")
             
-            except Exception as e:
-                print(f"  ✗ {city_name}: Error - {e}")
+    #         except Exception as e:
+    #             print(f"  ✗ {city_name}: Error - {e}")
         
-        # Initialize graph structure
-        city_list = list(self.cities.keys())
-        for city in city_list:
-            self.graph[city] = {}
+    #     # Initialize graph structure
+    #     city_list = list(self.cities.keys())
+    #     for city in city_list:
+    #         self.graph[city] = {}
         
-        # Fetch distances between cities using Distance Matrix API
-        print("\nFetching distances between cities...")
-        self._fetch_distances(city_list)
+    #     # Fetch distances between cities using Distance Matrix API
+    #     print("\nFetching distances between cities...")
+    #     self._fetch_distances(city_list)
     
+    
+    def add_city(self, city_name: str):
+        """Dynamically add a city by geocoding it."""
+        try:
+            geocode_result = self.gmaps.geocode(city_name)
+            if geocode_result:
+                location = geocode_result[0]['geometry']['location']
+                lat, lng = location['lat'], location['lng']
+                formatted_name = geocode_result[0]['formatted_address']
+                self.cities[city_name] = (lat, lng)
+                self.graph[city_name] = {}
+                print(f"✓ Added {city_name}")
+                print(f"  Location: {formatted_name}")
+                print(f"  Coords: ({lat:.4f}, {lng:.4f})")
+                return True
+            else:
+                print(f"✗ {city_name}: Not found in Google Maps")
+                return False
+        except Exception as e:
+            print(f"✗ {city_name}: Error - {e}")
+            return False
+        
+    
+    def connect_cities(self, city1: str, city2: str):
+        """Add connection between two cities with real distance."""
+        try:
+            # Make sure both cities exist in graph
+            if city1 not in self.graph:
+                self.graph[city1] = {}
+            if city2 not in self.graph:
+                self.graph[city2] = {}
+            
+            result = self.gmaps.distance_matrix(
+                origins=[city1],
+                destinations=[city2],
+                mode="driving",
+                units="imperial"
+            )
+            
+            if result['rows'][0]['elements'][0]['status'] == 'OK':
+                distance = result['rows'][0]['elements'][0]['distance']['value'] / 1609.34
+                self.graph[city1][city2] = distance
+                self.graph[city2][city1] = distance
+                print(f"✓ {city1} ↔ {city2}: {distance:.0f} miles")
+                return True
+            else:
+                print(f"✗ Could not get distance")
+                return False
+        except Exception as e:
+            print(f"✗ Error: {e}")
+            return False
     def _fetch_distances(self, cities: list):
         """
         Fetch driving distances between cities using Google Distance Matrix API.
