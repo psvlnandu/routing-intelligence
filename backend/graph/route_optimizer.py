@@ -22,7 +22,7 @@ try:
         Node, 
         uniform_cost_search,
         astar_search,
-        greedy_best_first_search,
+        greedy_best_first_graph_search,
         InstrumentedProblem
     )
 except ImportError as e:
@@ -174,7 +174,7 @@ class RouteOptimizer:
         # Use professor's Greedy function with instrumentation
         # greedy_best_first_graph_search is an alias for best_first_graph_search with f=h
         instrumented_problem = InstrumentedProblem(problem)
-        result_node = greedy_best_first_search(
+        result_node = greedy_best_first_graph_search(
             instrumented_problem, 
             lambda node: problem.h(node),
             display=False
