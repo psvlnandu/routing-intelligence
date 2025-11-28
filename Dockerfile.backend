@@ -8,15 +8,11 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy only the backend code (or all code, depending on your project structure)
+# Copy the entire backend directory, including main.py, into /app/backend
 COPY backend /app/backend
-COPY main.py /app/main.py
-# If main.py is inside the backend directory: COPY backend /app/backend
 
 # Expose the API port (8000)
 EXPOSE 8000
 
-# Command to run the backend application
-# (Assuming your main.py uses uvicorn/gunicorn/etc. to bind to 0.0.0.0:8000)
-CMD ["python", "/app/backend/main.py"] 
-# NOTE: Adjust the path if main.py is not directly in the backend directory.
+# Command to run the backend application using the correct path
+CMD ["python", "/app/backend/main.py"]
