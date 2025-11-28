@@ -35,9 +35,6 @@ try:
     print(f"✓ Initialized: {city_graph}")
 except Exception as e:
     print(f"✗ Error initializing city graph: {e}")
-    print("\nMake sure GOOGLE_MAPS_API_KEY is set:")
-    print("  - Add to .env file: GOOGLE_MAPS_API_KEY=your_key_here")
-    print("  - Or set environment variable: export GOOGLE_MAPS_API_KEY=your_key_here")
 
 # Create FastAPI app
 app = FastAPI(
@@ -46,14 +43,36 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Enable CORS for Streamlit frontend
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:8501")
+
+# ⚠️ CHANGE THE NEXT LINE TO USE A LIST OF ALLOWED ORIGINS ⚠️
+origins = [
+    # 1. Local development (Streamlit's default port)
+    "http://localhost:8501", 
+    # 2. Local development (Alternative localhost)
+    "http://127.0.0.1:8501",
+    # 3. The actual deployed Streamlit frontend URL on Render (Use your service name)
+    # The URL needs to be the one you set up for the frontend service.
+    "https://routing-intelligence-frontend.onrender.com" 
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    # Use the defined list of origins
+    allow_origins=origins, 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# # Enable CORS for Streamlit frontend
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 
 # Request/Response models

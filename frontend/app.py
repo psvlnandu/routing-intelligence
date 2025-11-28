@@ -62,10 +62,20 @@ This project compares three pathfinding algorithms on **real NY State cities** (
 # Sidebar for configuration
 st.sidebar.header("⚙️ Configuration")
 
+
+import os
+
+if os.environ.get("RENDER") == "true":
+    # Use the deployed backend URL
+    api_url = "https://routing-intelligence-api.onrender.com"
+else:
+    # Use local URL for development
+    api_url = "http://localhost:8000"
+
 # API endpoint
-api_url = st.sidebar.text_input(
+st.sidebar.text_input(
     "API URL",
-    value="http://localhost:8000",
+    value=api_url,
     help="FastAPI backend URL"
 )
 
