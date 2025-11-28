@@ -183,11 +183,9 @@ def find_routes(request: RouteRequest):
         )
     
     try:
-        # Add cities if they don't exist yet (geocode them)
         if initial_city not in city_graph.get_all_cities():
             print(f"Geocoding {initial_city}...")
             city_graph.add_city(initial_city)
-        
         if goal_city not in city_graph.get_all_cities():
             print(f"Geocoding {goal_city}...")
             city_graph.add_city(goal_city)
@@ -196,20 +194,18 @@ def find_routes(request: RouteRequest):
         if initial_city not in city_graph.get_all_cities():
             raise HTTPException(
                 status_code=400,
-                detail=f"Could not find coordinates for '{initial_city}'"
+                detail=f"Could not find coordinates for '{initial_city}'",
             )
         if goal_city not in city_graph.get_all_cities():
             raise HTTPException(
-                status_code=400,
+                status_code=400, 
                 detail=f"Could not find coordinates for '{goal_city}'"
             )
         
-        # Add connection between cities if it doesn't exist
-        if goal_city not in city_graph.get_neighbors(initial_city):
-            print(f"Getting distance between {initial_city} and {goal_city}...")
-            city_graph.connect_cities(initial_city, goal_city)
-        
-        # Run algorithms
+        # Build dynamic network between cities
+        print(f"\nBuilding network for {initial_city} → {goal_city}...")
+        city_graph.build_dynamic_network(initial_city, goal_city, num_intermediate=12)
+            
         results = RouteOptimizer.run_all_algorithms(initial_city, goal_city, city_graph)
         
     except HTTPException:

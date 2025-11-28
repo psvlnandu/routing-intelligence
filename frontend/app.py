@@ -91,42 +91,35 @@ with col2:
     goal_city = st.text_input("📍 To:", value="Houston, TX", placeholder="Enter city name")
 
 
-
-# Find routes button
 if st.sidebar.button("🔍 Find Routes", use_container_width=True, type="primary"):
-    if initial_city == goal_city:
-        st.error("Initial and goal cities must be different!")
+    if not initial_city or not goal_city:
+        st.error("❌ Please enter both locations")
+    elif initial_city.strip() == goal_city.strip():
+        st.error("❌ Locations must be different")
     else:
-        # Call API
         try:
-            with st.spinner("Running algorithms..."):
+            with st.spinner("Building network and finding routes..."):
                 response = requests.post(
                     f"{api_url}/routes",
                     json={
-                        "initial_city": initial_city,
-                        "goal_city": goal_city
+                        "initial_city": initial_city.strip(),
+                        "goal_city": goal_city.strip()
                     },
-                    timeout=30
+                    timeout=60
                 )
             
             if response.status_code == 200:
-                data = response.json()
-                st.session_state.last_result = data
+                st.session_state.last_result = response.json()
+                st.rerun()
             else:
                 error_detail = response.json().get('detail', 'Unknown error')
-                st.error(f"API Error: {error_detail}")
+                st.error(f"❌ API Error: {error_detail}")
         
         except requests.exceptions.ConnectionError:
-            st.error("""
-            ❌ Cannot connect to backend. 
-            
-            Make sure to run in terminal:
-            ```
-            python main.py
-            ```
-            """)
+            st.error("❌ Cannot connect to backend")
         except Exception as e:
             st.error(f"❌ Error: {str(e)}")
+
 
 # Display results if available
 if "last_result" in st.session_state:

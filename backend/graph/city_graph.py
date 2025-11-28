@@ -64,6 +64,7 @@ class CityGraph:
         # Get API key
         if api_key is None:
             api_key = os.getenv("GOOGLE_MAPS_API_KEY")
+            print(api_key)
         
         if not api_key:
             raise ValueError(
@@ -77,16 +78,18 @@ class CityGraph:
         self.graph = {}
         self.directed = False
         
+        # Initialize Google Maps client (needed for dynamic operations even when using cache)
+        print("Initializing Google Maps client...")
+        if googlemaps is None:
+            raise ImportError("googlemaps library required. Run: pip install googlemaps")
+
+        self.gmaps = googlemaps.Client(key=api_key)
+
         # Try to load from cache first
         if use_cache and os.path.exists(self.cache_file):
             print(f"Loading cached city data from {self.cache_file}...")
             self._load_from_cache()
         else:
-            print("Initializing Google Maps client...")
-            if googlemaps is None:
-                raise ImportError("googlemaps library required. Run: pip install googlemaps")
-            
-            self.gmaps = googlemaps.Client(key=api_key)
             print("Fetching city coordinates and distances from Google Maps API...")
             self._initialize_from_api()
             self._save_to_cache()
@@ -226,6 +229,98 @@ class CityGraph:
         except Exception as e:
             print(f"✗ Error: {e}")
             return False
+    
+    
+    def find_intermediate_cities(self, start_city: str, goal_city: str, num_cities: int = 10):
+        """
+        Find real intermediate cities between start and goal using Google Places API.
+        Searches for cities along the route direction.
+        """
+        try:
+            start_coords = self.get_coordinates(start_city)
+            goal_coords = self.get_coordinates(goal_city)
+            
+            if not start_coords or not goal_coords:
+                return []
+            
+            start_lat, start_lon = start_coords
+            goal_lat, goal_lon = goal_coords
+            
+            intermediate_cities = []
+            
+            # Create search points along the route
+            for i in range(1, num_cities + 1):
+                t = i / (num_cities + 1)
+                search_lat = start_lat + (goal_lat - start_lat) * t
+                search_lon = start_lon + (goal_lon - start_lon) * t
+                
+                try:
+                    # Search for cities near this point
+                    places_result = self.gmaps.places_nearby(
+                        location=(search_lat, search_lon),
+                        radius=80000,  # 80km radius to find cities
+                        type='locality'  # Only cities/towns
+                    )
+                    
+                    if places_result.get('results'):
+                        for place in places_result['results']:
+                            city_name = place['name']
+                            # Avoid duplicates and start/goal cities
+                            if (city_name not in intermediate_cities and 
+                                city_name != start_city and 
+                                city_name != goal_city):
+                                intermediate_cities.append(city_name)
+                                print(f"  ✓ Found intermediate city: {city_name}")
+                                break  # Move to next search point
+                
+                except Exception as e:
+                    print(f"  Error searching at point {i}: {e}")
+            
+            print(f"✓ Found {len(intermediate_cities)} intermediate cities")
+            return intermediate_cities[:num_cities]
+        
+        except Exception as e:
+            print(f"✗ Error finding intermediate cities: {e}")
+            return []
+    def build_dynamic_network(self, start_city: str, goal_city: str, num_intermediate: int = 12):
+        """
+        Build a dynamic network by finding intermediate cities and connecting nearby ones.
+        
+        Args:
+            start_city: Starting city
+            goal_city: Goal city
+            num_intermediate: Number of intermediate cities to find
+        """
+        print(f"\n🌍 Building dynamic network from {start_city} to {goal_city}...")
+        
+        # Add start and goal if not present
+        if start_city not in self.get_all_cities():
+            self.add_city(start_city)
+        if goal_city not in self.get_all_cities():
+            self.add_city(goal_city)
+        
+        # Find intermediate cities
+        intermediate = self.find_intermediate_cities(start_city, goal_city, num_intermediate)
+        
+        # Add all intermediate cities
+        for city in intermediate:
+            if city not in self.get_all_cities():
+                self.add_city(city)
+        
+        # Build ordered list: start → intermediate → goal
+        all_cities = [start_city] + intermediate + [goal_city]
+        
+        # Connect nearby cities (within ~500 miles)
+        print(f"\n🔗 Connecting nearby cities...")
+        for i, city1 in enumerate(all_cities):
+            # Connect to next few cities (create multiple paths)
+            for city2 in all_cities[i+1:i+4]:  # Connect to next 3 cities
+                if city2 not in self.get_neighbors(city1):
+                    self.connect_cities(city1, city2)
+        
+        print(f"✓ Network built with {len(all_cities)} cities")
+        return all_cities
+
     def _fetch_distances(self, cities: list):
         """
         Fetch driving distances between cities using Google Distance Matrix API.
