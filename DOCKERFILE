@@ -15,10 +15,12 @@ COPY . .
 EXPOSE 8000 8501
 
 # Create startup script
-RUN echo '#!/bin/bash\n\
-cd /app/backend/graph && python main.py &\n\
-sleep 5\n\
-cd /app && streamlit run frontend/app.py --server.port=8501 --server.address=0.0.0.0\n\
-' > /app/start.sh && chmod +x /app/start.sh
+RUN mkdir -p /app && cat > /app/start.sh << 'EOF'
+#!/bin/bash
+cd /app/backend && python main.py &
+sleep 5
+cd /app && streamlit run frontend/app.py --server.port=8501 --server.address=0.0.0.0
+EOF
+RUN chmod +x /app/start.sh
 
 CMD ["/app/start.sh"]

@@ -20,7 +20,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Add backend directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend', 'graph'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'graph'))
+# sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend', 'graph'))
 
 from graph.route_optimizer import RouteOptimizer
 from graph.city_graph import initialize_city_graph
