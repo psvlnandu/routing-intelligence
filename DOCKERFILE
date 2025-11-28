@@ -1,0 +1,58 @@
+FROM python:3.9-slim
+
+WORKDIR /app
+
+# Copy requirements
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy all code
+COPY . .
+
+# Expose ports
+EXPOSE 8000 8501
+
+# Create startup script
+RUN echo '#!/bin/bash\n\
+cd backend/graph && python main.py &\n\
+sleep 5\n\
+cd /app && streamlit run frontend/app.py --server.port=8501 --server.address=0.0.0.0\n\
+' > /app/start.sh && chmod +x /app/start.sh
+
+CMD ["/app/start.sh"]
+```
+
+---
+
+**Step 2: Create `.dockerignore` to exclude unnecessary files**
+
+Create `/workspaces/routing-intelligence/.dockerignore`:
+```
+__pycache__
+*.pyc
+.git
+.gitignore
+.venv
+venv
+*.egg-info
+.DS_Store
+city_graph_cache.json
+```
+
+---
+
+**Step 3: Update `requirements.txt` to include ALL dependencies**
+
+Make sure `/workspaces/routing-intelligence/requirements.txt` has:
+```
+fastapi==0.104.1
+uvicorn==0.24.0
+streamlit==1.28.1
+streamlit-folium==0.14.0
+folium==0.14.0
+requests==2.31.0
+python-dotenv==1.0.0
+googlemaps==4.10.0
+pydantic==2.0.0
