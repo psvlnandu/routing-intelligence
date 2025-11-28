@@ -23,4 +23,5 @@ cd /app && streamlit run frontend/app.py --server.port=8501 --server.address=0.0
 EOF
 RUN chmod +x /app/start.sh
 
+# THIS LINE WAS MISSING!
 CMD ["/app/start.sh"]
