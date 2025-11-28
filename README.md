@@ -2,9 +2,11 @@
 
 ---
 title: Route Optimization Algorithm Comparison
+emoji: 🗺️
 colorFrom: blue
 colorTo: purple
 sdk: docker
+sdk_version: "1.0"
 app_file: frontend/app.py
 pinned: false
 ---
