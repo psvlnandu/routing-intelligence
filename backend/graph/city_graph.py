@@ -91,8 +91,8 @@ class CityGraph:
             self._load_from_cache()
         else:
             print("Fetching city coordinates and distances from Google Maps API...")
-            # self._initialize_from_api()
-            # self._save_to_cache()
+            self._initialize_from_api()
+            self._save_to_cache()
     
     def _load_from_cache(self):
         """Load cached city and graph data from JSON file."""
