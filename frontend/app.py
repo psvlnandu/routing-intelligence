@@ -72,22 +72,12 @@ else:
     # Use local URL for development
     api_url = "http://localhost:8000"
 
+# api_url= "https://routing-intelligence-backend.onrender.com"
+# print(f"Using API URL: {api_url}")
 # Display current API URL (read-only for debugging)
 st.sidebar.info(f"🔗 API: {api_url}")
 
-# Get list of cities
-@st.cache_data
-def get_cities(api_url):
-    # try:
-    #     response = requests.get(f"{api_url}/cities", timeout=5)
-    #     if response.status_code == 200:
-    #         return sorted(response.json()["cities"])
-    # except Exception as e:
-    #     st.sidebar.error(f"Cannot connect to API: {e}")
-    #     return []
-    return[]
 
-cities = get_cities(api_url)
 
 # Allow free text input for any city in the world
 col1, col2 = st.sidebar.columns(2)
@@ -98,6 +88,7 @@ with col2:
 
 
 if st.sidebar.button("🔍 Find Routes", use_container_width=True, type="primary"):
+    st.cache_data.clear()
     if not initial_city or not goal_city:
         st.error("❌ Please enter both locations")
     elif initial_city.strip() == goal_city.strip():
