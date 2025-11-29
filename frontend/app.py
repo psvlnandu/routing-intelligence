@@ -72,12 +72,8 @@ else:
     # Use local URL for development
     api_url = "http://localhost:8000"
 
-# API endpoint
-st.sidebar.text_input(
-    "API URL",
-    value=api_url,
-    help="FastAPI backend URL"
-)
+# Display current API URL (read-only for debugging)
+st.sidebar.info(f"🔗 API: {api_url}")
 
 # Get list of cities
 @st.cache_data
@@ -117,6 +113,8 @@ if st.sidebar.button("🔍 Find Routes", use_container_width=True, type="primary
                     },
                     timeout=60
                 )
+                print(f"Response status: {response.status_code}")
+                print(f"Response: {response.text[:500]}")  # First 500 chars
             
             if response.status_code == 200:
                 st.session_state.last_result = response.json()
