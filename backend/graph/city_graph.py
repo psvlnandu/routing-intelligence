@@ -1,23 +1,19 @@
 """
-NYC Metropolitan Route Optimization - City Data with Google Maps API
+Route Optimization - City Graph with Google Maps API
 
-This module creates a city graph for New York State using Google Maps API:
+This module creates a city graph using Google Maps API:
 - Fetches real city coordinates using Geocoding API
 - Calculates real driving distances using Distance Matrix API
-- Creates a graph of cities with realistic road networks
+- Dynamically builds networks between any two locations
 
 Requires a Google Maps API key with:
   - Geocoding API enabled
   - Distance Matrix API enabled
-  - Maps SDK enabled
+  - Places API enabled
 
 Set your API key as environment variable:
   export GOOGLE_MAPS_API_KEY="your_api_key_here"
-
-Or add to .env file:
-  GOOGLE_MAPS_API_KEY=your_api_key_here
 """
-
 import os
 import math
 import json
@@ -36,22 +32,22 @@ except ImportError:
 
 class CityGraph:
     """
-    Represents New York State cities as a graph using Google Maps API.
+    Represents cities as a graph using Google Maps API.
     
     Uses Google Maps Geocoding API to get coordinates and Distance Matrix API
-    to get real driving distances.
+    to get real driving distances. Dynamically builds networks on demand.
     
     Attributes:
         api_key: Google Maps API key
         gmaps: Google Maps client
         cities: Dict mapping city names to (latitude, longitude) tuples
         graph: Dict mapping city names to dicts of neighbors and distances
-        cache_file: JSON file for caching API results (to avoid rate limits)
+        cache_file: JSON file for caching API results
     """
     
     def __init__(self, api_key: Optional[str] = None, use_cache: bool = True):
         """
-        Initialize the NY State city graph with Google Maps API.
+        Initialize the city graph with Google Maps API.
         
         Args:
             api_key: Google Maps API key. If None, reads from GOOGLE_MAPS_API_KEY env var
@@ -60,11 +56,9 @@ class CityGraph:
         Raises:
             ValueError: If API key not provided and not in environment
         """
-        
         # Get API key
         if api_key is None:
             api_key = os.getenv("GOOGLE_MAPS_API_KEY")
-            print(api_key)
         
         if not api_key:
             raise ValueError(
@@ -78,20 +72,18 @@ class CityGraph:
         self.graph = {}
         self.directed = False
         
-        # Initialize Google Maps client (needed for dynamic operations even when using cache)
+        # Initialize Google Maps client
         print("Initializing Google Maps client...")
         if googlemaps is None:
             raise ImportError("googlemaps library required. Run: pip install googlemaps")
-
         self.gmaps = googlemaps.Client(key=api_key)
-
+        
         # Try to load from cache first
         if use_cache and os.path.exists(self.cache_file):
             print(f"Loading cached city data from {self.cache_file}...")
             self._load_from_cache()
         else:
-            print("Fetching city coordinates and distances from Google Maps API...")
-            self._initialize_from_api()
+            print("Ready to add cities dynamically via add_city()")
             self._save_to_cache()
     
     def _load_from_cache(self):
@@ -120,65 +112,6 @@ class CityGraph:
         except Exception as e:
             print(f"Warning: Could not save cache: {e}")
     
-    # def _initialize_from_api(self):
-    #     """Fetch city coordinates and distances from Google Maps API."""
-        
-    #     # List of NY State cities to include
-    #     ny_cities = [
-    #         "Buffalo, NY",
-    #         "Rochester, NY",
-    #         "Syracuse, NY",
-    #         "Albany, NY",
-    #         "New York City, NY",
-    #         "Yonkers, NY",
-    #         "Niagara Falls, NY",
-    #         "Utica, NY",
-    #         "Schenectady, NY",
-    #         "Glens Falls, NY",
-    #         "Plattsburgh, NY",
-    #         "Watertown, NY",
-    #         "Oswego, NY",
-    #         "Ithaca, NY",
-    #         "Binghamton, NY",
-    #         "Elmira, NY",
-    #         "Corning, NY",
-    #         "Olean, NY",
-    #         "Batavia, NY",
-    #         "Kingston, NY",
-    #         "New Rochelle, NY",
-    #     ]
-        
-    #     # Fetch coordinates for each city
-    #     print("Geocoding cities...")
-    #     for city_full in ny_cities:
-    #         try:
-    #             # Extract short name (e.g., "Buffalo" from "Buffalo, NY")
-    #             city_name = city_full.split(",")[0]
-                
-    #             # Geocode the city
-    #             geocode_result = self.gmaps.geocode(city_full)
-                
-    #             if geocode_result:
-    #                 location = geocode_result[0]['geometry']['location']
-    #                 lat, lng = location['lat'], location['lng']
-    #                 self.cities[city_name] = (lat, lng)
-    #                 print(f"  ✓ {city_name}: ({lat:.4f}, {lng:.4f})")
-    #             else:
-    #                 print(f"  ✗ {city_name}: Not found")
-            
-    #         except Exception as e:
-    #             print(f"  ✗ {city_name}: Error - {e}")
-        
-    #     # Initialize graph structure
-    #     city_list = list(self.cities.keys())
-    #     for city in city_list:
-    #         self.graph[city] = {}
-        
-    #     # Fetch distances between cities using Distance Matrix API
-    #     print("\nFetching distances between cities...")
-    #     self._fetch_distances(city_list)
-    
-    
     def add_city(self, city_name: str):
         """Dynamically add a city by geocoding it."""
         try:
@@ -199,7 +132,6 @@ class CityGraph:
         except Exception as e:
             print(f"✗ {city_name}: Error - {e}")
             return False
-        
     
     def connect_cities(self, city1: str, city2: str):
         """Add connection between two cities with real distance."""
@@ -229,7 +161,6 @@ class CityGraph:
         except Exception as e:
             print(f"✗ Error: {e}")
             return False
-    
     
     def find_intermediate_cities(self, start_city: str, goal_city: str, num_cities: int = 10):
         """
@@ -282,6 +213,7 @@ class CityGraph:
         except Exception as e:
             print(f"✗ Error finding intermediate cities: {e}")
             return []
+    
     def build_dynamic_network(self, start_city: str, goal_city: str, num_intermediate: int = 12):
         """
         Build a dynamic network by finding intermediate cities and connecting nearby ones.
@@ -310,7 +242,7 @@ class CityGraph:
         # Build ordered list: start → intermediate → goal
         all_cities = [start_city] + intermediate + [goal_city]
         
-        # Connect nearby cities (within ~500 miles)
+        # Connect nearby cities (create multiple paths)
         print(f"\n🔗 Connecting nearby cities...")
         for i, city1 in enumerate(all_cities):
             # Connect to next few cities (create multiple paths)
@@ -320,61 +252,13 @@ class CityGraph:
         
         print(f"✓ Network built with {len(all_cities)} cities")
         return all_cities
-
-    def _fetch_distances(self, cities: list):
-        """
-        Fetch driving distances between cities using Google Distance Matrix API.
-        
-        The Distance Matrix API allows up to 25 origins × 25 destinations per request.
-        """
-        
-        # Distance Matrix API limit: 25x25
-        batch_size = 10
-        
-        for i in range(0, len(cities), batch_size):
-            origins = cities[i:i+batch_size]
-            destinations = cities[i:i+batch_size]
-            
-            try:
-                # Call Distance Matrix API
-                result = self.gmaps.distance_matrix(
-                    origins=origins,
-                    destinations=destinations,
-                    mode="driving",
-                    units="imperial"  # Miles
-                )
-                
-                # Parse results
-                for origin_idx, origin in enumerate(origins):
-                    for dest_idx, destination in enumerate(destinations):
-                        if origin != destination:
-                            try:
-                                element = result['rows'][origin_idx]['elements'][dest_idx]
-                                
-                                if element['status'] == 'OK':
-                                    # Distance in miles
-                                    distance = element['distance']['value'] / 1609.34
-                                    
-                                    # Only add edge if not already present (undirected)
-                                    if destination not in self.graph[origin]:
-                                        self.graph[origin][destination] = distance
-                                    
-                                    print(f"  {origin} → {destination}: {distance:.0f} miles")
-                                else:
-                                    print(f"  ✗ {origin} → {destination}: {element['status']}")
-                            
-                            except (KeyError, IndexError) as e:
-                                print(f"  ✗ Error parsing distance for {origin} → {destination}")
-            
-            except Exception as e:
-                print(f"Error fetching distances: {e}")
     
     def get_neighbors(self, city: str) -> Dict[str, float]:
         """
         Get all neighboring cities and distances from a given city.
         
         Args:
-            city: City name (string)
+            city: City name
         
         Returns:
             Dict mapping neighbor city names to distances
@@ -409,9 +293,7 @@ class CityGraph:
     def haversine_distance(self, city1: str, city2: str) -> float:
         """
         Calculate straight-line distance (as crow flies) between two cities
-        using the Haversine formula.
-        
-        This is used as the heuristic function for A* search.
+        using the Haversine formula. Used as heuristic for A* search.
         
         Args:
             city1: First city name
@@ -453,11 +335,6 @@ class CityGraph:
         return f"CityGraph({len(self.cities)} cities, {num_edges} connections)"
 
 
-# Singleton instance for use throughout the application
-# Note: This will only be created when explicitly imported and initialized
-city_graph = None
-
-
 def initialize_city_graph(api_key: Optional[str] = None, use_cache: bool = True) -> CityGraph:
     """
     Initialize the global city graph instance.
@@ -474,6 +351,4 @@ def initialize_city_graph(api_key: Optional[str] = None, use_cache: bool = True)
         >>> graph = initialize_city_graph()
         >>> print(graph)
     """
-    global city_graph
-    city_graph = CityGraph(api_key=api_key, use_cache=use_cache)
-    return city_graph
+    return CityGraph(api_key=api_key, use_cache=use_cache)
