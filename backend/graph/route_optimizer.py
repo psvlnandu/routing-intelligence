@@ -216,8 +216,7 @@ class RouteOptimizer:
         # Use professor's DFS function with instrumentation
         instrumented_problem = InstrumentedProblem(problem)
         result_node = depth_first_graph_search(
-            instrumented_problem,
-            display=False
+            instrumented_problem
         )
         
         elapsed = (time.time() - start_time) * 1000
