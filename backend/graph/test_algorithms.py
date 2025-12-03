@@ -50,18 +50,19 @@ def main():
     
     print("\nAvailable cities:")
     cities = city_graph.get_all_cities()
-    # for i, city in enumerate(sorted(cities), 1):
-    #     print(f"  {i:2d}. {city}")
-    
-    # Test route 1: Buffalo to NYC
-    print("\n" + "="*80)
-    print("TEST 1: Buffalo → NYC")
-    print("="*80)
+  
+
     
     try:
-        results = RouteOptimizer.run_all_algorithms("Potsdam", "New York City", city_graph)
         
-        for algo in ["ucs", "astar", "greedy"]:
+        # Build dynamic network (same as backend does)
+        print("\nBuilding dynamic network...")
+        city_graph.build_dynamic_network("Potsdam, NY", "Austin, TX", num_intermediate=12)
+        
+        # Now run algorithms on the built network
+        results = RouteOptimizer.run_all_algorithms("Potsdam, NY", "Austin, TX", city_graph)
+        
+        for algo in ["ucs", "astar", "greedy","dfs"]:
             print_result(results[algo])
         
         # Compare results
@@ -72,6 +73,7 @@ def main():
         ucs_result = results["ucs"]
         astar_result = results["astar"]
         greedy_result = results["greedy"]
+        dfs_result = results["dfs"]
         
         if ucs_result.success and astar_result.success:
             print(f"A* Nodes Expanded: {astar_result.nodes_expanded} "
@@ -91,25 +93,17 @@ def main():
                 print(f"  → Greedy is suboptimal by {excess:.2f} miles ({excess_pct:.1f}% worse)")
             else:
                 print(f"Greedy found optimal path!")
+        if dfs_result.success:
+            print(f"\nDFS Nodes Expanded: {dfs_result.nodes_expanded}")
+            print(f"DFS Path: {dfs_result.path_cost:.2f} miles "
+                  f"(vs A* optimal: {astar_result.path_cost:.2f} miles)")
+            if dfs_result.path_cost > astar_result.path_cost:
+                excess_pct = ((dfs_result.path_cost - astar_result.path_cost) / astar_result.path_cost) * 100
+                print(f"  → DFS is suboptimal by {excess_pct:.1f}% worse")
     
     except Exception as e:
         print(f"Error in test 1: {e}")
     
-    # Test route 2: Rochester to Albany
-    print("\n" + "="*80)
-    print("TEST 2: Rochester → Albany")
-    print("="*80)
-    
-    try:
-        results2 = RouteOptimizer.run_all_algorithms("Rochester", "Albany", city_graph)
-        
-        for algo in ["ucs", "astar", "greedy"]:
-            print_result(results2[algo])
-    
-    except Exception as e:
-        print(f"Error in test 2: {e}")
-    
-
 
 if __name__ == "__main__":
     main()

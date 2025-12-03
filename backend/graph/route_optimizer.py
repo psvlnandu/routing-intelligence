@@ -19,19 +19,20 @@ import os
 # Import from professor's search framework
 # Make sure search.py and utils.py are in the same directory
 try:
-    from graph.search import (
+    from search import (
         Node, 
         uniform_cost_search,
         astar_search,
         greedy_best_first_graph_search,
+        depth_first_graph_search,
         InstrumentedProblem
     )
 except ImportError as e:
-    print(f"Error: Could not import from search.py. Make sure search.py and utils.py are in this directory.")
+    # print(f"Error: Could not import from search.py. Make sure search.py and utils.py are in this directory.")
     print(f"Error details: {e}")
     sys.exit(1)
 
-from graph.route_problem import RouteOptimizationProblem
+from route_problem import RouteOptimizationProblem
 
 
 class AlgorithmResult:
@@ -202,6 +203,43 @@ class RouteOptimizer:
             )
     
     @staticmethod
+    def depth_first_search(problem):
+        """
+        Depth First Search using professor's implementation.
+        
+        Expands the deepest nodes first using a stack.
+        Very fast but does NOT guarantee optimal path.
+        May find very long paths.
+        """
+        start_time = time.time()
+        
+        # Use professor's DFS function with instrumentation
+        instrumented_problem = InstrumentedProblem(problem)
+        result_node = depth_first_graph_search(
+            instrumented_problem,
+            display=False
+        )
+        
+        elapsed = (time.time() - start_time) * 1000
+        
+        if result_node:
+            path = RouteOptimizer._extract_path(result_node)
+            return AlgorithmResult(
+                "DFS",
+                path=path,
+                path_cost=result_node.path_cost,
+                nodes_expanded=instrumented_problem.states,
+                execution_time_ms=elapsed,
+                success=True
+            )
+        else:
+            return AlgorithmResult(
+                "DFS",
+                nodes_expanded=instrumented_problem.states,
+                execution_time_ms=elapsed,
+                success=False
+            )
+    @staticmethod
     def run_all_algorithms(initial_city, goal_city, city_graph):
         """
         Run all three algorithms on the same problem and return results.
@@ -219,7 +257,8 @@ class RouteOptimizer:
         results = {
             "ucs": RouteOptimizer.uniform_cost_search(problem),
             "astar": RouteOptimizer.astar_search(problem),
-            "greedy": RouteOptimizer.greedy_best_first_search(problem)
+            "greedy": RouteOptimizer.greedy_best_first_search(problem),
+            "dfs": RouteOptimizer.depth_first_search(problem),
         }
         
         return results

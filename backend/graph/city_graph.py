@@ -84,7 +84,7 @@ class CityGraph:
             self._load_from_cache()
         else:
             print("Ready to add cities dynamically via add_city()")
-            self._save_to_cache()
+            # self._save_to_cache()
     
     def _load_from_cache(self):
         """Load cached city and graph data from JSON file."""

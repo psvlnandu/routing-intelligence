@@ -9,7 +9,7 @@ functions.
 import sys
 from collections import deque
 
-from graph.utils import *
+from utils import *
 
 
 class Problem:
