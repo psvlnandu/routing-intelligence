@@ -1,6 +1,3 @@
-"""
-Map display component - visualizes algorithm exploration patterns on Folium maps.
-"""
 import streamlit as st
 import folium
 from streamlit_folium import st_folium

@@ -9,6 +9,12 @@ Uses Google Maps API for real geographic data and the professor's search.py fram
 Run with: streamlit run app.py
 """
 
+import sys
+import os
+
+# Add frontend directory to path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 import streamlit as st
 from config import PAGE_TITLE, PAGE_ICON, LAYOUT, INITIAL_SIDEBAR_STATE
 from components_header import display_header
@@ -44,10 +50,6 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-
-# ============================================================================
-# MAIN APPLICATION
-# ============================================================================
 
 def main():
     """Main application entry point."""
