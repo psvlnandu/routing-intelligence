@@ -17,7 +17,18 @@ def display_maps(result: dict, intermediate_cities: list = None):
 
     if intermediate_cities is None:
         intermediate_cities = []
-        st.error(f"intermediate cities :{intermediate_cities}")
+    st.error(f"intermediate cities :{intermediate_cities}")
+
+    city_coordinates = {}
+    for algo_key in result["results"]:
+        algo_result = result["results"][algo_key]
+        path_coords = algo_result["path_coordinates"]
+        path_cities = algo_result["path"]
+        
+        # Map each city name to its coordinates
+        for city_name, coord in zip(path_cities, path_coords):
+            if city_name not in city_coordinates:
+                city_coordinates[city_name] = (coord["lat"], coord["lon"])
     
     # Create map base with no tiles
     m = folium.Map(
@@ -91,29 +102,26 @@ def display_maps(result: dict, intermediate_cities: list = None):
                 # Plot intermediate cities
                 for city in intermediate_cities:
                     # Get coordinates from path_coordinates
-                    city_coords = None
-                    for coord in coordinates:
-                        if coord.get("city") == city:  # Assuming path_coordinates has city info
-                            city_coords = (coord["lat"], coord["lon"])
-                            break
+                    if city in city_coordinates:
+                        city_coords = city_coordinates[city]
                     
-                    if city_coords:
                         if city in path_cities:
-                            # ✅ IN FINAL PATH
-                            folium.CircleMarker(
-                                location=city_coords,
-                                radius=6,
-                                color=color,
-                                fill=True,
-                                fillColor=color,
-                                fillOpacity=0.8,
-                                weight=2,
-                                popup=f"{city} (in path)",
-                                tooltip=f"{city} - In {ALGORITHM_NAMES[algo_key]} path"
-                            ).add_to(m)
-                        
+                                print(f"  → Plotting {city} as IN PATH (colored)")
+                                folium.CircleMarker(
+                                    location=city_coords,
+                                    radius=6,
+                                    color=color,
+                                    fill=True,
+                                    fillColor=color,
+                                    fillOpacity=0.8,
+                                    weight=2,
+                                    popup=f"{city} (in path)",
+                                    tooltip=f"{city} - In {ALGORITHM_NAMES[algo_key]} path"
+                                ).add_to(m)
+                            
                         elif city in expanded_states:
                             # 🔍 EXPLORED BUT NOT IN PATH
+                            print(f"  → Plotting {city} as EXPLORED (gray)")
                             folium.CircleMarker(
                                 location=city_coords,
                                 radius=4,
@@ -125,6 +133,8 @@ def display_maps(result: dict, intermediate_cities: list = None):
                                 popup=f"{city} (explored, not used)",
                                 tooltip=f"{city} - Explored but not in path"
                             ).add_to(m)
+                        else:
+                            print(f"  → NOT PLOTTED (not in path or expanded)")
     
     # Add start and goal cities as circles (like Google Maps)
     first_algo = result["results"]["ucs"]
