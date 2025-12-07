@@ -78,6 +78,7 @@ class PathResult(BaseModel):
     execution_time_ms: float
     success: bool
     path_coordinates: List[Dict[str, float]]
+    expanded_states: List[str]
 
 
 class RouteResponse(BaseModel):
@@ -219,7 +220,8 @@ def find_routes(request: RouteRequest):
             nodes_expanded=algo_result.nodes_expanded,
             execution_time_ms=algo_result.execution_time_ms,
             success=algo_result.success,
-            path_coordinates=get_path_coordinates(algo_result.path)
+            path_coordinates=get_path_coordinates(algo_result.path),
+            expanded_states=algo_result.expanded_states
         )
     return RouteResponse(
         initial_city=initial_city,

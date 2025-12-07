@@ -1525,8 +1525,17 @@ class InstrumentedProblem(Problem):
 
     def actions(self, state):
         self.succs += 1
+        # Extract state name - it might be a string or a Node
+        state_name = state if isinstance(state, str) else state.state
+        # Track that this state was expanded
+        if state_name not in self.expanded_states:
+            self.expanded_states.append(state_name)
+        
+        print(f"DEBUG actions(): state_name = {state_name}, expanded_states = {self.expanded_states}")
+        
         return self.problem.actions(state)
-
+    
+    
     def result(self, state, action):
         self.states += 1
         return self.problem.result(state, action)

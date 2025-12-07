@@ -73,12 +73,13 @@ def display_maps(result: dict, intermediate_cities: list = None):
         "dfs": show_dfs
     }
 
-    
-    # Add each algorithm's path if checkbox is checked
+        # Add each algorithm's path if checkbox is checked
     for algo_key, should_show in algorithms_to_show.items():
         if should_show:
             algo_result = result["results"][algo_key]
-            
+            print(f"DEBUG algo_result keys: {algo_result.keys()}")
+            print(f"DEBUG expanded_states value: {algo_result.get('expanded_states')}")
+                
             if algo_result["success"]:
                 color = ALGORITHM_COLORS.get(algo_key, "#808080")
                 coordinates = algo_result["path_coordinates"]
@@ -94,48 +95,50 @@ def display_maps(result: dict, intermediate_cities: list = None):
                 ).add_to(m)
 
                 # Get cities in final path (excluding start/goal)
-                path_cities = algo_result["path"][1:-1]
+                path_cities = set(algo_result["path"][1:-1])
                 
                 # Get expanded states that are intermediate cities
                 expanded_states = set(algo_result.get("expanded_states", []))
                 
-                # Plot intermediate cities
+                # Plot intermediate cities ONLY for this algorithm
                 for city in intermediate_cities:
-                    # Get coordinates from path_coordinates
+                    print(f"DEBUG: checking {city}")
+                    print(f"  - in path_cities ({path_cities}): {city in path_cities}")
+                    print(f"  - in expanded_states ({expanded_states}): {city in expanded_states}")
+    
+                    # Get coordinates from the city_coordinates mapping
                     if city in city_coordinates:
                         city_coords = city_coordinates[city]
-                    
+                        
                         if city in path_cities:
-                                print(f"  → Plotting {city} as IN PATH (colored)")
-                                folium.CircleMarker(
-                                    location=city_coords,
-                                    radius=6,
-                                    color=color,
-                                    fill=True,
-                                    fillColor=color,
-                                    fillOpacity=0.8,
-                                    weight=2,
-                                    popup=f"{city} (in path)",
-                                    tooltip=f"{city} - In {ALGORITHM_NAMES[algo_key]} path"
-                                ).add_to(m)
-                            
-                        elif city in expanded_states:
-                            # 🔍 EXPLORED BUT NOT IN PATH
-                            print(f"  → Plotting {city} as EXPLORED (gray)")
+                            # ✅ IN FINAL PATH - larger, colored dot
+                            print(f"DEBUG: {algo_key} - {city} IN PATH")
                             folium.CircleMarker(
                                 location=city_coords,
-                                radius=4,
-                                color="gray",
+                                radius=6,
+                                color=color,
                                 fill=True,
-                                fillColor="gray",
-                                fillOpacity=0.3,
-                                weight=1,
-                                popup=f"{city} (explored, not used)",
-                                tooltip=f"{city} - Explored but not in path"
+                                fillColor=color,
+                                fillOpacity=0.8,
+                                weight=2,
+                                popup=f"{city} (in {ALGORITHM_NAMES[algo_key]} path)",
+                                tooltip=f"{city} - In {ALGORITHM_NAMES[algo_key]} path"
+                            ).add_to(m)
+                        
+                        elif city in expanded_states:
+                            # 🔍 EXPLORED BUT NOT IN PATH - smaller, gray dot
+                            print(f"DEBUG: {algo_key} - {city} EXPLORED")
+                            folium.Marker(
+                                location=city_coords,
+                                icon=folium.Icon(
+                                    color="gray",
+                                    icon="search",  # 🔍 search icon
+                                    prefix="fa"     # FontAwesome icons
+                                )
                             ).add_to(m)
                         else:
-                            print(f"  → NOT PLOTTED (not in path or expanded)")
-    
+                            print(f"  → NOT PLOTTED")
+                            
     # Add start and goal cities as circles (like Google Maps)
     first_algo = result["results"]["ucs"]
     if first_algo["success"]:
