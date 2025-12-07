@@ -8,13 +8,17 @@ import os
 from config import ALGORITHM_COLORS, ALGORITHM_NAMES
 
 
-def display_maps(result: dict):
+def display_maps(result: dict, intermediate_cities: list = None):
     """Display Google Map with all algorithm paths - user can toggle visibility."""
     
     # 💡 GET THE API KEY FROM THE ENVIRONMENT
     GOOGLE_MAPS_API_KEY = os.getenv("GOOGLE_MAPS_API_KEY")
     GOOGLE_ROADMAP_URL = f"https://mt1.google.com/vt/lyrs=m&x={{x}}&y={{y}}&z={{z}}&key={GOOGLE_MAPS_API_KEY}"
 
+    if intermediate_cities is None:
+        intermediate_cities = []
+        st.error(f"intermediate cities :{intermediate_cities}")
+    
     # Create map base with no tiles
     m = folium.Map(
         location=[39.5, -98.0],
@@ -77,6 +81,50 @@ def display_maps(result: dict):
                     opacity=0.8,
                     popup=f"{ALGORITHM_NAMES[algo_key]}: {algo_result['total_distance']:.0f} mi"
                 ).add_to(m)
+
+                # Get cities in final path (excluding start/goal)
+                path_cities = algo_result["path"][1:-1]
+                
+                # Get expanded states that are intermediate cities
+                expanded_states = set(algo_result.get("expanded_states", []))
+                
+                # Plot intermediate cities
+                for city in intermediate_cities:
+                    # Get coordinates from path_coordinates
+                    city_coords = None
+                    for coord in coordinates:
+                        if coord.get("city") == city:  # Assuming path_coordinates has city info
+                            city_coords = (coord["lat"], coord["lon"])
+                            break
+                    
+                    if city_coords:
+                        if city in path_cities:
+                            # ✅ IN FINAL PATH
+                            folium.CircleMarker(
+                                location=city_coords,
+                                radius=6,
+                                color=color,
+                                fill=True,
+                                fillColor=color,
+                                fillOpacity=0.8,
+                                weight=2,
+                                popup=f"{city} (in path)",
+                                tooltip=f"{city} - In {ALGORITHM_NAMES[algo_key]} path"
+                            ).add_to(m)
+                        
+                        elif city in expanded_states:
+                            # 🔍 EXPLORED BUT NOT IN PATH
+                            folium.CircleMarker(
+                                location=city_coords,
+                                radius=4,
+                                color="gray",
+                                fill=True,
+                                fillColor="gray",
+                                fillOpacity=0.3,
+                                weight=1,
+                                popup=f"{city} (explored, not used)",
+                                tooltip=f"{city} - Explored but not in path"
+                            ).add_to(m)
     
     # Add start and goal cities as circles (like Google Maps)
     first_algo = result["results"]["ucs"]

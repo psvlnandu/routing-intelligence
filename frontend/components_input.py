@@ -42,6 +42,7 @@ def display_input_section():
                     result = call_find_routes(initial_city, goal_city)
                 
                 st.session_state.last_result = result
+                st.session_state.intermediate_cities = result.get("intermediate_cities", [])  # ADD THIS
                 st.rerun()
             
             except requests.exceptions.ConnectionError as e:

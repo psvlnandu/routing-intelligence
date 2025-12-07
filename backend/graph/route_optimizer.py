@@ -48,11 +48,12 @@ class AlgorithmResult:
         success: Whether goal was reached
     """
     def __init__(self, algorithm_name, path=None, path_cost=0, 
-                 nodes_expanded=0, execution_time_ms=0, success=False):
+                 nodes_expanded=0, expanded_states=0, execution_time_ms=0, success=False):
         self.algorithm_name = algorithm_name
         self.path = path or []
         self.path_cost = path_cost
         self.nodes_expanded = nodes_expanded
+        self.expanded_states = expanded_states or [] 
         self.execution_time_ms = execution_time_ms
         self.success = success
     
@@ -63,6 +64,7 @@ class AlgorithmResult:
             "path": self.path,
             "total_distance": round(self.path_cost, 2),
             "nodes_expanded": self.nodes_expanded,
+            "expanded_states": self.expanded_states,  
             "execution_time_ms": round(self.execution_time_ms, 2),
             "success": self.success
         }
@@ -117,6 +119,7 @@ class RouteOptimizer:
                 path=path,
                 path_cost=result_node.path_cost,
                 nodes_expanded=instrumented_problem.states,
+                expanded_states=instrumented_problem.states, 
                 execution_time_ms=elapsed,
                 success=True
             )
@@ -124,6 +127,7 @@ class RouteOptimizer:
             return AlgorithmResult(
                 "UCS",
                 nodes_expanded=instrumented_problem.states,
+                expanded_states=instrumented_problem.states, 
                 execution_time_ms=elapsed,
                 success=False
             )
@@ -152,6 +156,7 @@ class RouteOptimizer:
                 path=path,
                 path_cost=result_node.path_cost,
                 nodes_expanded=instrumented_problem.states,
+                expanded_states=instrumented_problem.states, 
                 execution_time_ms=elapsed,
                 success=True
             )
@@ -159,6 +164,7 @@ class RouteOptimizer:
             return AlgorithmResult(
                 "A*",
                 nodes_expanded=instrumented_problem.states,
+                expanded_states=instrumented_problem.states, 
                 execution_time_ms=elapsed,
                 success=False
             )
@@ -191,6 +197,7 @@ class RouteOptimizer:
                 path=path,
                 path_cost=result_node.path_cost,
                 nodes_expanded=instrumented_problem.states,
+                expanded_states=instrumented_problem.states, 
                 execution_time_ms=elapsed,
                 success=True
             )
@@ -198,6 +205,7 @@ class RouteOptimizer:
             return AlgorithmResult(
                 "Greedy",
                 nodes_expanded=instrumented_problem.states,
+                expanded_states=instrumented_problem.states, 
                 execution_time_ms=elapsed,
                 success=False
             )
@@ -228,6 +236,7 @@ class RouteOptimizer:
                 path=path,
                 path_cost=result_node.path_cost,
                 nodes_expanded=instrumented_problem.states,
+                expanded_states=instrumented_problem.states, 
                 execution_time_ms=elapsed,
                 success=True
             )
@@ -235,6 +244,7 @@ class RouteOptimizer:
             return AlgorithmResult(
                 "DFS",
                 nodes_expanded=instrumented_problem.states,
+                expanded_states=instrumented_problem.states, 
                 execution_time_ms=elapsed,
                 success=False
             )

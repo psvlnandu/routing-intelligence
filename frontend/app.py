@@ -69,7 +69,7 @@ def main():
         display_results(result)
         
         # Show maps visualization
-        display_maps(result)
+        display_maps(result, st.session_state.get("intermediate_cities", []))
     
     # Sidebar information
     with st.sidebar:

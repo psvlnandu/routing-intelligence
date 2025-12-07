@@ -30,12 +30,7 @@ def print_result(result):
 
 
 def main():
-    """Test the algorithms on various routes."""
-    
-    print("\n" + "="*60)
-    print("ROUTE OPTIMIZATION - ALGORITHM COMPARISON")
-    print("="*60)
-    
+
     # Initialize city graph with Google Maps API
     print("\nInitializing city graph...")
     try:
@@ -43,9 +38,6 @@ def main():
         # print(f"✓ {city_graph}")
     except Exception as e:
         print(f"✗ Error initializing city graph: {e}")
-        print("\nMake sure GOOGLE_MAPS_API_KEY is set:")
-        print("  - Add to .env file: GOOGLE_MAPS_API_KEY=your_key_here")
-        print("  - Or set environment variable: export GOOGLE_MAPS_API_KEY=your_key_here")
         return
     
     print("\nAvailable cities:")

@@ -1,13 +1,3 @@
-"""
-FastAPI Backend for Route Optimization
-
-Provides REST API endpoints for running route optimization algorithms
-and returning results with visualization coordinates.
-
-Uses Google Maps API for real city data.
-Make sure GOOGLE_MAPS_API_KEY is set in .env or environment variables.
-"""
-
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -45,7 +35,6 @@ app = FastAPI(
 
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:8501")
 
-# ⚠️ CHANGE THE NEXT LINE TO USE A LIST OF ALLOWED ORIGINS ⚠️
 origins = [
     # 1. Local development (Streamlit's default port)
     "http://localhost:8501", 
@@ -64,15 +53,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# # Enable CORS for Streamlit frontend
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=["*"],
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
 
 
 # Request/Response models
@@ -107,6 +87,7 @@ class RouteResponse(BaseModel):
     initial_coordinates: Dict[str, float]
     goal_coordinates: Dict[str, float]
     results: Dict[str, PathResult]
+    intermediate_cities: List[str]  
 
 
 # Helper functions
@@ -157,20 +138,6 @@ def health_check():
         }
     return {"status": "healthy", "version": "1.0.0"}
 
-
-# @app.get("/cities")
-# def list_cities():
-#     """Get list of all available cities."""
-#     if city_graph is None:
-#         raise HTTPException(
-#             status_code=500,
-#             detail="City graph not initialized. Set GOOGLE_MAPS_API_KEY environment variable."
-#         )
-#     cities = sorted(city_graph.get_all_cities())
-#     return {
-#         "cities": cities,
-#         "count": len(cities)
-#     }
 
 
 
@@ -224,8 +191,9 @@ def find_routes(request: RouteRequest):
         
         # Build dynamic network between cities
         print(f"\nBuilding network for {initial_city} → {goal_city}...")
-        city_graph.build_dynamic_network(initial_city, goal_city, num_intermediate=12)
-            
+        all_cities, intermediate_cities = city_graph.build_dynamic_network(initial_city, goal_city, num_intermediate=12)  # CAPTURE intermediate_cities
+        print(f'intermediate cities= {len(intermediate_cities)}')   
+        print(f'intermediate cities list= {intermediate_cities}') 
         results = RouteOptimizer.run_all_algorithms(initial_city, goal_city, city_graph)
         
     except HTTPException:
@@ -248,13 +216,13 @@ def find_routes(request: RouteRequest):
             success=algo_result.success,
             path_coordinates=get_path_coordinates(algo_result.path)
         )
-    
     return RouteResponse(
         initial_city=initial_city,
         goal_city=goal_city,
         initial_coordinates=get_city_coordinates(initial_city),
         goal_coordinates=get_city_coordinates(goal_city),
-        results=formatted_results
+        results=formatted_results,
+        intermediate_cities=intermediate_cities  # ADD THIS LINE
     )
 
 @app.get("/routes/{initial}/{goal}")

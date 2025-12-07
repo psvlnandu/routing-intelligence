@@ -1,19 +1,4 @@
-"""
-Route Optimization - City Graph with Google Maps API
 
-This module creates a city graph using Google Maps API:
-- Fetches real city coordinates using Geocoding API
-- Calculates real driving distances using Distance Matrix API
-- Dynamically builds networks between any two locations
-
-Requires a Google Maps API key with:
-  - Geocoding API enabled
-  - Distance Matrix API enabled
-  - Places API enabled
-
-Set your API key as environment variable:
-  export GOOGLE_MAPS_API_KEY="your_api_key_here"
-"""
 import os
 import math
 import json
@@ -71,7 +56,7 @@ class CityGraph:
         self.cities = {}
         self.graph = {}
         self.directed = False
-        
+        self.intermediate_cities = []  # Add this line
         # Initialize Google Maps client
         print("Initializing Google Maps client...")
         if googlemaps is None:
@@ -232,7 +217,7 @@ class CityGraph:
         
         # Find intermediate cities
         intermediate = self.find_intermediate_cities(start_city, goal_city, num_intermediate)
-        
+        self.intermediate_cities= intermediate
         # Add all intermediate cities
         for city in intermediate:
             if city not in self.get_all_cities():
@@ -250,7 +235,7 @@ class CityGraph:
                     self.connect_cities(city1, city2)
         
         print(f"✓ Network built with {len(all_cities)} cities")
-        return all_cities
+        return all_cities, intermediate
     
     def get_neighbors(self, city: str) -> Dict[str, float]:
         """
