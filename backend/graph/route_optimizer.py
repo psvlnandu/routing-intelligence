@@ -119,7 +119,7 @@ class RouteOptimizer:
                 path=path,
                 path_cost=result_node.path_cost,
                 nodes_expanded=instrumented_problem.states,
-                expanded_states=instrumented_problem.states, 
+                expanded_states=instrumented_problem.expanded_states, 
                 execution_time_ms=elapsed,
                 success=True
             )
@@ -127,7 +127,7 @@ class RouteOptimizer:
             return AlgorithmResult(
                 "UCS",
                 nodes_expanded=instrumented_problem.states,
-                expanded_states=instrumented_problem.states, 
+                expanded_states=instrumented_problem.expanded_states, 
                 execution_time_ms=elapsed,
                 success=False
             )
@@ -156,7 +156,7 @@ class RouteOptimizer:
                 path=path,
                 path_cost=result_node.path_cost,
                 nodes_expanded=instrumented_problem.states,
-                expanded_states=instrumented_problem.states, 
+                expanded_states=instrumented_problem.expanded_states, 
                 execution_time_ms=elapsed,
                 success=True
             )
@@ -164,7 +164,7 @@ class RouteOptimizer:
             return AlgorithmResult(
                 "A*",
                 nodes_expanded=instrumented_problem.states,
-                expanded_states=instrumented_problem.states, 
+                expanded_states=instrumented_problem.expanded_states, 
                 execution_time_ms=elapsed,
                 success=False
             )
@@ -197,7 +197,7 @@ class RouteOptimizer:
                 path=path,
                 path_cost=result_node.path_cost,
                 nodes_expanded=instrumented_problem.states,
-                expanded_states=instrumented_problem.states, 
+                expanded_states=instrumented_problem.expanded_states, 
                 execution_time_ms=elapsed,
                 success=True
             )
@@ -205,7 +205,7 @@ class RouteOptimizer:
             return AlgorithmResult(
                 "Greedy",
                 nodes_expanded=instrumented_problem.states,
-                expanded_states=instrumented_problem.states, 
+                expanded_states=instrumented_problem.expanded_states, 
                 execution_time_ms=elapsed,
                 success=False
             )
@@ -236,7 +236,7 @@ class RouteOptimizer:
                 path=path,
                 path_cost=result_node.path_cost,
                 nodes_expanded=instrumented_problem.states,
-                expanded_states=instrumented_problem.states, 
+                expanded_states=instrumented_problem.expanded_states, 
                 execution_time_ms=elapsed,
                 success=True
             )
@@ -244,7 +244,7 @@ class RouteOptimizer:
             return AlgorithmResult(
                 "DFS",
                 nodes_expanded=instrumented_problem.states,
-                expanded_states=instrumented_problem.states, 
+                expanded_states=instrumented_problem.expanded_states, 
                 execution_time_ms=elapsed,
                 success=False
             )

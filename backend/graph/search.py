@@ -1521,6 +1521,7 @@ class InstrumentedProblem(Problem):
         self.problem = problem
         self.succs = self.goal_tests = self.states = 0
         self.found = None
+        self.expanded_states = [] 
 
     def actions(self, state):
         self.succs += 1
