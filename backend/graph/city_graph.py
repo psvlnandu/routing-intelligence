@@ -65,7 +65,7 @@ class CityGraph:
         
         # Try to load from cache first
         if use_cache and os.path.exists(self.cache_file):
-            print(f"Loading cached city data from {self.cache_file}...")
+            # print(f"Loading cached city data from {self.cache_file}...")
             self._load_from_cache()
         else:
             print("Ready to add cities dynamically via add_city()")
@@ -146,58 +146,194 @@ class CityGraph:
             print(f"✗ Error: {e}")
             return False
     
+        
+      
+      
     def find_intermediate_cities(self, start_city: str, goal_city: str, num_cities: int = 10):
         """
-        Find real intermediate cities between start and goal using Google Places API.
-        Searches for cities along the route direction.
+        IMPROVED VERSION:
+        - Extracts state from input more robustly
+        - Filters results to only cities in that state
+        - Returns cities with full location info
+        - DEBUGGED: Better error handling
         """
         try:
+            print(f"\n🔍 Finding intermediate cities between {start_city} and {goal_city}")
+            
             start_coords = self.get_coordinates(start_city)
             goal_coords = self.get_coordinates(goal_city)
             
             if not start_coords or not goal_coords:
+                print("❌ Could not geocode start or goal city")
                 return []
             
             start_lat, start_lon = start_coords
             goal_lat, goal_lon = goal_coords
             
-            intermediate_cities = []
+            print(f"  Start: ({start_lat:.4f}, {start_lon:.4f})")
+            print(f"  Goal: ({goal_lat:.4f}, {goal_lon:.4f})")
             
-            # Create search points along the route
+            start_state = None
+            goal_state = None
+            
+            # Extract start state
+            if "," in start_city:
+                parts = [p.strip() for p in start_city.split(",")]
+                if len(parts) >= 2:
+                    start_state = parts[1]
+            
+            # Extract goal state
+            if "," in goal_city:
+                parts = [p.strip() for p in goal_city.split(",")]
+                if len(parts) >= 2:
+                    goal_state = parts[1]
+            
+            if not start_state or not goal_state:
+                print("❌ Please use format: 'City, STATE' for both start and goal")
+                return []
+            
+            print(f"  📍 Route spans: {start_state} → {goal_state}")
+            
+            intermediate_cities = []
             for i in range(1, num_cities + 1):
-                t = i / (num_cities + 1)
-                search_lat = start_lat + (goal_lat - start_lat) * t
-                search_lon = start_lon + (goal_lon - start_lon) * t
-                
                 try:
+                    t = i / (num_cities + 1)
+                    search_lat = start_lat + (goal_lat - start_lat) * t
+                    search_lon = start_lon + (goal_lon - start_lon) * t
+                    
+                    print(f"\n  🔎 Search point {i}/10: ({search_lat:.4f}, {search_lon:.4f})")
+                    
                     # Search for cities near this point
                     places_result = self.gmaps.places_nearby(
                         location=(search_lat, search_lon),
-                        radius=80000,  # 80km radius to find cities
-                        type='locality'  # Only cities/towns
+                        radius=80000,  # 80km radius
+                        type='locality'
                     )
                     
-                    if places_result.get('results'):
-                        for place in places_result['results']:
-                            city_name = place['name']
-                            # Avoid duplicates and start/goal cities
-                            if (city_name not in intermediate_cities and 
-                                city_name != start_city and 
-                                city_name != goal_city):
-                                intermediate_cities.append(city_name)
-                                print(f"  ✓ Found intermediate city: {city_name}")
-                                break  # Move to next search point
+                    if not places_result.get('results'):
+                        print(f"No places found at this point")
+                        continue
+                    
+                    print(f"    Found {len(places_result['results'])} places")
+                    
+                    # ============ FILTER RESULTS ============
+                    for idx, place in enumerate(places_result['results'][:5]):  # Check top 5
+                        try:
+                            city_name = place.get('name', '').strip()
+                            
+                            if not city_name:
+                                continue
+                            
+                            print(f"      Checking: {city_name}...", end=" ")
+                            
+                            # Skip if already found
+                            if city_name in intermediate_cities:
+                                print("(duplicate)")
+                                continue
+                            
+                            # Skip if is start or goal city
+                            start_city_name = start_city.split(",")[0].strip().lower()
+                            goal_city_name = goal_city.split(",")[0].strip().lower()
+                            
+                            if city_name.lower() == start_city_name:
+                                print("(is start city)")
+                                continue
+                            
+                            if city_name.lower() == goal_city_name:
+                                print("(is goal city)")
+                                continue
+                            
+                            # ============ TRY TO FIND IN BOTH STATES ============
+                            city_coords = None
+                            found_state = None
+                            
+                            # Try start state first
+                            full_city_name = f"{city_name}, {start_state}"
+                            city_coords = self.get_coordinates(full_city_name)
+                            if city_coords:
+                                found_state = start_state
+                            
+                            # If not in start state, try goal state
+                            if not city_coords:
+                                full_city_name = f"{city_name}, {goal_state}"
+                                city_coords = self.get_coordinates(full_city_name)
+                                if city_coords:
+                                    found_state = goal_state
+                            
+                            # If still not found, try without state (risky, but catches some cases)
+                            # if not city_coords:
+                            #     city_coords = self.get_coordinates(city_name)
+                            #     found_state = "?"
+                            # if not city_coords:
+                            #     print(f"(not in {start_state} or {goal_state}, skipping)")
+                            #     continue
+                            
+                            if not city_coords:
+                                print(f"(not found in {start_state} or {goal_state})")
+                                continue
+
+                            full_city = f"{city_name}, {found_state}"
+                            if full_city in intermediate_cities:
+                                print(f"(duplicate)")
+                                continue
+                            
+                            city_lat, city_lon = city_coords
+                            
+                            # ============ CHECK IF ON ROUTE ============
+                            # Allow reasonable tolerance for multi-state routes
+                            # (±3 degrees ~333km for longer routes)
+                            lat_min = min(start_lat, goal_lat)
+                            lat_max = max(start_lat, goal_lat)
+                            lon_min = min(start_lon, goal_lon)
+                            lon_max = max(start_lon, goal_lon)
+                            
+                            tolerance = 3 if abs(goal_lat - start_lat) > 2 else 1
+                            
+                            lat_in_range = lat_min - tolerance <= city_lat <= lat_max + tolerance
+                            lon_in_range = lon_min - tolerance <= city_lon <= lon_max + tolerance
+                            
+                            if not (lat_in_range and lon_in_range):
+                                print(f"(off route: {city_lat:.2f},{city_lon:.2f})")
+                                continue
+                            
+                            
+                            # ============ SUCCESS: ADD TO LIST ============
+                            if found_state == "?":
+                                full_city = f"{city_name}, USA"
+                            else:
+                                full_city = f"{city_name}, {found_state}"
+
+                            # Check for duplicates (ONCE for both cases)
+                            if full_city not in intermediate_cities:
+                                intermediate_cities.append(full_city)
+                                print(f"    ✓ ADDED: {full_city}")
+                            else:
+                                print(f"    (skipping duplicate: {full_city})")
+                                continue  # Skip to next search point
+                            
+                           
+                        
+                        except Exception as e:
+                            print(f"(error: {str(e)[:40]})")
+                            continue
                 
                 except Exception as e:
-                    print(f"  Error searching at point {i}: {e}")
+                    print(f"  ❌ Error at search point {i}: {e}")
+                    continue
             
-            print(f"✓ Found {len(intermediate_cities)} intermediate cities")
+            print(f"\n✅ Found {len(intermediate_cities)} intermediate cities:")
+            for city in intermediate_cities:
+                print(f"   - {city}")
+            
             return intermediate_cities[:num_cities]
         
         except Exception as e:
-            print(f"✗ Error finding intermediate cities: {e}")
+            print(f"❌ CRITICAL ERROR: {e}")
+            import traceback
+            traceback.print_exc()
             return []
-    
+
+ 
     def build_dynamic_network(self, start_city: str, goal_city: str, num_intermediate: int = 12):
         """
         Build a dynamic network by finding intermediate cities and connecting nearby ones.

@@ -5,6 +5,8 @@ import os
 
 # API Configuration
 API_URL = os.environ.get("API_URL", "http://localhost:8000")
+
+# API_URL = "https://routing-intelligence-backend.onrender.com"
 if os.environ.get("RENDER") == "true":
     API_URL = "https://routing-intelligence-backend.onrender.com"
 
