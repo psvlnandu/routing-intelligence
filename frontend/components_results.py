@@ -229,15 +229,32 @@ def _display_comparisons(all_results: dict):
     # UCS vs Heuristic comparison
     ucs_algo = next((a for a in df.index if 'UCS' in a), None)
     if ucs_algo and len(astar_algos) > 0:
-        st.markdown("### Heuristic Impact (vs UCS)")
+        st.markdown("### 📊 Heuristic Impact (vs UCS)")
         ucs_nodes = df.loc[ucs_algo, "Nodes Expanded"]
         
+        # Calculate efficiency improvements
+        efficiency_data = {}
         for algo_name in astar_algos:
             astar_nodes = df.loc[algo_name, "Nodes Expanded"]
             reduction = ((ucs_nodes - astar_nodes) / ucs_nodes) * 100
-            st.markdown(f"- {algo_name}: **{reduction:.1f}%** fewer nodes explored")
-
-
+            efficiency_data[algo_name] = max(0, reduction)  # Ensure non-negative
+        
+        # Sort by efficiency
+        sorted_efficiency = sorted(efficiency_data.items(), key=lambda x: x[1], reverse=True)
+        
+        # Create two-column layout
+        col_chart, col_rank = st.columns([2, 1])
+        
+        with col_chart:
+            # Prepare data for horizontal bar chart
+            efficiency_df = pd.DataFrame(sorted_efficiency, columns=['Heuristic', 'Reduction %'])
+            
+            # Use st.bar_chart for simple visualization
+            st.bar_chart(
+                efficiency_df.set_index('Heuristic')['Reduction %'],
+                use_container_width=True,
+                height=300
+            )
 def display_no_results():
     """Display message when no results are available."""
     st.info("🔍 Enter two cities and click 'Find Routes' to see algorithm comparisons")
