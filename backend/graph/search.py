@@ -1531,7 +1531,7 @@ class InstrumentedProblem(Problem):
         if state_name not in self.expanded_states:
             self.expanded_states.append(state_name)
         
-        print(f"DEBUG actions(): state_name = {state_name}, expanded_states = {self.expanded_states}")
+        # print(f"DEBUG actions(): state_name = {state_name}, expanded_states = {self.expanded_states}")
         
         return self.problem.actions(state)
     

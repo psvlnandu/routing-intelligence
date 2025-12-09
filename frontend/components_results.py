@@ -7,7 +7,7 @@ import pandas as pd
 
 def display_results(result: dict):
     """
-    Display results from all algorithms in a structured format.
+    Display results from all algorithms in a structured format using accordions.
     
     Args:
         result: Dictionary containing results from backend API
@@ -26,53 +26,40 @@ def display_results(result: dict):
     
     # Display UCS
     if ucs_results:
-        st.subheader("Uninformed Search")
-        cols = st.columns(len(ucs_results))
-        results_data = {}
-        for idx, algo_key in enumerate(ucs_results):
-            with cols[idx]:
-                _display_algorithm_result(result, algo_key, results_data)
+        with st.expander("▼ Uninformed Search", expanded=True):
+            for algo_key in ucs_results:
+                _display_algorithm_result_compact(result, algo_key)
     
     # Display A* variants
     if astar_results:
-        st.subheader("A* Search (Informed - Different Heuristics)")
-        cols = st.columns(min(3, len(astar_results)))
-        results_data = {}
-        for idx, algo_key in enumerate(astar_results):
-            with cols[idx % len(cols)]:
-                _display_algorithm_result(result, algo_key, results_data)
+        with st.expander("▼ A* Search (Informed - Different Heuristics)", expanded=True):
+            for algo_key in astar_results:
+                _display_algorithm_result_compact(result, algo_key)
     
     # Display Greedy
     if greedy_results:
-        st.subheader("Greedy Search")
-        cols = st.columns(len(greedy_results))
-        results_data = {}
-        for idx, algo_key in enumerate(greedy_results):
-            with cols[idx]:
-                _display_algorithm_result(result, algo_key, results_data)
+        with st.expander("▼ Greedy Search", expanded=False):
+            for algo_key in greedy_results:
+                _display_algorithm_result_compact(result, algo_key)
     
     # Display DFS
     if dfs_results:
-        st.subheader("Depth-First Search")
-        cols = st.columns(len(dfs_results))
-        results_data = {}
-        for idx, algo_key in enumerate(dfs_results):
-            with cols[idx]:
-                _display_algorithm_result(result, algo_key, results_data)
+        with st.expander("▼ Depth-First Search", expanded=False):
+            for algo_key in dfs_results:
+                _display_algorithm_result_compact(result, algo_key)
     
     # Show comparisons
     st.divider()
     _display_comparisons(result["results"])
 
 
-def _display_algorithm_result(result: dict, algo_key: str, results_data: dict):
+def _display_algorithm_result_compact(result: dict, algo_key: str):
     """
-    Display individual algorithm result card.
+    Display individual algorithm result in compact format (for accordions).
     
     Args:
         result: Full result dictionary from backend
         algo_key: Key to access algorithm result (e.g., 'ucs', 'astar_haversine')
-        results_data: Dictionary to store results for comparison
     """
     if algo_key not in result["results"]:
         st.warning(f"❌ {algo_key} - No results")
@@ -89,54 +76,35 @@ def _display_algorithm_result(result: dict, algo_key: str, results_data: dict):
     nodes_expanded = algo_result.get("nodes_expanded", 0)
     execution_time = algo_result.get("execution_time_ms", 0)
     path_length = len(algo_result.get("path", []))
+    path = algo_result.get("path", [])
     
     # Format algo name for display
     display_name = _format_algo_name(algo_key)
     
-    # Store for comparison
-    results_data[display_name] = {
-        "Distance (mi)": round(distance, 1),
-        "Nodes Expanded": nodes_expanded,
-        "Execution Time (ms)": round(execution_time, 2),
-        "Path Length": path_length,
-    }
+    # Display algorithm info in columns
+    col1, col2, col3, col4, col5 = st.columns([2, 1.2, 1.2, 1.2, 1.2])
     
-    # Display card
-    with st.container():
-        st.markdown(f"### {display_name}")
-        
-        # Metrics row
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric(
-                "📍 Distance",
-                f"{distance:.0f} mi",
-                help="Total miles driven"
-            )
-            st.metric(
-                "🔍 Nodes",
-                f"{nodes_expanded}",
-                help="Number of cities examined"
-            )
-        
-        with col2:
-            st.metric(
-                "⏱️ Time",
-                f"{execution_time:.1f} ms",
-                help="Algorithm execution time"
-            )
-            st.metric(
-                "🛣️ Cities",
-                f"{path_length}",
-                help="Number of cities in final path"
-            )
-        
-        # Path display
-        path = algo_result.get("path", [])
-        if path:
-            with st.expander("📋 Route"):
-                path_str = " → ".join(path)
-                st.text(path_str)
+    with col1:
+        st.markdown(f"**{display_name}**")
+    
+    with col2:
+        st.write(f"📍 **{distance:.0f} mi**")
+    
+    with col3:
+        st.write(f"🔍 **{nodes_expanded}**")
+    
+    with col4:
+        st.write(f"⏱️ **{execution_time:.1f} ms**")
+    
+    with col5:
+        st.write(f"🛣️ **{path_length}**")
+    
+    # Show route inline
+    if path:
+        path_str = " → ".join(path)
+        st.caption(f"📋 **Route:** {path_str}")
+    
+    st.divider()
 
 
 def _format_algo_name(algo_key: str) -> str:
@@ -164,7 +132,7 @@ def _display_comparisons(all_results: dict):
     if not all_results:
         return
     
-    st.header("Algorithm Comparison")
+    st.header("📊 Algorithm Comparison")
     
     # Build comparison data
     comparison_data = {}
@@ -198,7 +166,7 @@ def _display_comparisons(all_results: dict):
     )
     
     # Analysis
-    st.markdown("### Analysis")
+    st.markdown("### 📈 Analysis")
     
     col1, col2, col3 = st.columns(3)
     
@@ -255,6 +223,22 @@ def _display_comparisons(all_results: dict):
                 use_container_width=True,
                 height=300
             )
+        
+        with col_rank:
+            st.markdown("**Efficiency Ranking:**")
+            for idx, (algo_name, reduction) in enumerate(sorted_efficiency, 1):
+                if idx == 1:
+                    emoji = "🥇"
+                elif idx == 2:
+                    emoji = "🥈"
+                elif idx == 3:
+                    emoji = "🥉"
+                else:
+                    emoji = "  "
+                
+                st.markdown(f"{emoji} {algo_name}\n**{reduction:.1f}%**")
+
+
 def display_no_results():
     """Display message when no results are available."""
     st.info("🔍 Enter two cities and click 'Find Routes' to see algorithm comparisons")
