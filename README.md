@@ -23,19 +23,18 @@ An interactive tool to visualize how UCS, A*, and Greedy Best-First search algor
 - Frontend: Streamlit + Folium
 - APIs: Google Maps
 
-  ## How to run?
+## How to run?
 
-  - Launch <a href ="https://routing-intelligence-backend.onrender.com/">backend</a>
+- Launch <a href ="https://routing-intelligence-backend.onrender.com/">backend</a>
+
+  ```
+  # clone the repo
+  git clone repo_name
   
-  - 
-    ```
-    # clone the repo
-    git clone repo_name
-    
-    # change directory
-    cd frontend
+  # change directory
+  cd frontend
 
-    # run streamlit app
-    streamlit run app.py
-    ```
+  # run streamlit app
+  streamlit run app.py
+  ```
     
