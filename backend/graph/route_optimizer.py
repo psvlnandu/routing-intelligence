@@ -133,7 +133,7 @@ class RouteOptimizer:
             )
     
     @staticmethod
-    def astar_search(problem):
+    def astar_search(problem,heuristic_name='haversine'):
         """
         A* Search using professor's implementation.
         
@@ -142,33 +142,42 @@ class RouteOptimizer:
         Guarantees finding the optimal path if heuristic is admissible.
         """
         start_time = time.time()
-        
+        # Select heuristic function
+        heuristic_map = {
+            'haversine': lambda node: problem.h(node),
+            'euclidean': lambda node: problem.h_euclidean(node),
+            'manhattan': lambda node: problem.h_manhattan(node),
+            'min_graph': lambda node: problem.h_min_graph(node),
+            'weighted': lambda node: problem.h_weighted(node),
+        }
+        h_func = heuristic_map.get(heuristic_name, heuristic_map['haversine'])
+    
         # Use professor's A* function with instrumentation
         instrumented_problem = InstrumentedProblem(problem)
-        result_node = astar_search(instrumented_problem, display=False)
+        result_node = astar_search(instrumented_problem, h=h_func, display=False)
         
         elapsed = (time.time() - start_time) * 1000
         
         if result_node:
             path = RouteOptimizer._extract_path(result_node)
             return AlgorithmResult(
-                "A*",
+                f"A* ({heuristic_name})",  # Show which heuristic was used
                 path=path,
                 path_cost=result_node.path_cost,
                 nodes_expanded=instrumented_problem.states,
-                expanded_states=instrumented_problem.expanded_states, 
+                expanded_states=instrumented_problem.expanded_states,
                 execution_time_ms=elapsed,
                 success=True
             )
         else:
             return AlgorithmResult(
-                "A*",
+                f"A* ({heuristic_name})",
                 nodes_expanded=instrumented_problem.states,
-                expanded_states=instrumented_problem.expanded_states, 
+                expanded_states=instrumented_problem.expanded_states,
                 execution_time_ms=elapsed,
                 success=False
             )
-    
+        
     @staticmethod
     def greedy_best_first_search(problem):
         """
@@ -184,7 +193,7 @@ class RouteOptimizer:
         instrumented_problem = InstrumentedProblem(problem)
         result_node = greedy_best_first_graph_search(
             instrumented_problem, 
-            lambda node: problem.h(node),
+            lambda node: problem.h(node), #← This IS minimizing h(n)
             display=False
         )
         
@@ -250,24 +259,22 @@ class RouteOptimizer:
             )
     @staticmethod
     def run_all_algorithms(initial_city, goal_city, city_graph):
-        """
-        Run all three algorithms on the same problem and return results.
+        """Run all algorithms, creating fresh problem for each."""
+        results = {}
         
-        Args:
-            initial_city: Starting city name (string)
-            goal_city: Destination city name (string)
-            city_graph: Initialized CityGraph object
+        algorithms = [
+            ("ucs", lambda p: RouteOptimizer.uniform_cost_search(p)),
+            ("astar_haversine", lambda p: RouteOptimizer.astar_search(p, 'haversine')),
+            ("astar_euclidean", lambda p: RouteOptimizer.astar_search(p, 'euclidean')),
+            ("astar_manhattan", lambda p: RouteOptimizer.astar_search(p, 'manhattan')),
+            ("astar_min_graph", lambda p: RouteOptimizer.astar_search(p, 'min_graph')),
+            ("astar_weighted", lambda p: RouteOptimizer.astar_search(p, 'weighted')),
+            ("greedy", lambda p: RouteOptimizer.greedy_best_first_search(p)),
+            ("dfs", lambda p: RouteOptimizer.depth_first_search(p)),
+        ]
         
-        Returns:
-            Dictionary with keys "ucs", "astar", "greedy" containing AlgorithmResult objects
-        """
-        problem = RouteOptimizationProblem(initial_city, goal_city, city_graph)
-        
-        results = {
-            "ucs": RouteOptimizer.uniform_cost_search(problem),
-            "astar": RouteOptimizer.astar_search(problem),
-            "greedy": RouteOptimizer.greedy_best_first_search(problem),
-            "dfs": RouteOptimizer.depth_first_search(problem),
-        }
+        for algo_name, algo_func in algorithms:
+            problem = RouteOptimizationProblem(initial_city, goal_city, city_graph)
+            results[algo_name] = algo_func(problem)
         
         return results

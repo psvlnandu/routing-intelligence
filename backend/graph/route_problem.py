@@ -134,6 +134,21 @@ class RouteOptimizationProblem:
         """
         # node.state is the current city
         return self.graph.haversine_distance(node.state, self.goal)
+    def h_euclidean(self, node):
+        """Euclidean distance heuristic"""
+        return self.graph.euclidean_distance(node.state, self.goal)
+    
+    def h_manhattan(self, node):
+        """Manhattan distance heuristic"""
+        return self.graph.manhattan_distance(node.state, self.goal)
+    
+    def h_min_graph(self, node):
+        """Minimum graph distance heuristic"""
+        return self.graph.min_graph_distance(node.state, self.goal)
+    
+    def h_weighted(self, node):
+        """Weighted combination heuristic"""
+        return self.graph.weighted_heuristic(node.state, self.goal)
     
     def __repr__(self):
         """String representation for debugging."""

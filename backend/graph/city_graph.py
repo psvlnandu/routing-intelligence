@@ -309,6 +309,40 @@ class CityGraph:
         
         return c * r
     
+
+    
+    def euclidean_distance(self, city1: str, city2: str) -> float:
+        """Euclidean distance"""
+        lat1, lon1 = self.get_coordinates(city1)
+        lat2, lon2 = self.get_coordinates(city2)
+        if not (lat1 and lon2):
+            return 0
+        # Approximate: 1 degree latitude ≈ 69 miles
+        return ((lat2 - lat1)**2 + (lon2 - lon1)**2)**0.5 * 69
+    
+    def manhattan_distance(self, city1: str, city2: str) -> float:
+        """Manhattan distance (taxicab metric)"""
+        lat1, lon1 = self.get_coordinates(city1)
+        lat2, lon2 = self.get_coordinates(city2)
+        if not (lat1 and lon2):
+            return 0
+        return (abs(lat2 - lat1) + abs(lon2 - lon1)) * 69
+    
+    def min_graph_distance(self, city1: str, city2: str) -> float:
+        """Minimum cost edge from current city"""
+        neighbors = self.get_neighbors(city1)
+        if not neighbors:
+            return 0
+        return min(neighbors.values())
+    
+    def weighted_heuristic(self, city1: str, city2: str) -> float:
+        """Weighted combination of heuristics"""
+        h_distance = self.haversine_distance(city1, city2)
+        h_graph = self.min_graph_distance(city1, city2)
+        alpha = 0.7  # 70% distance, 30% graph
+        return alpha * h_distance + (1 - alpha) * h_graph
+
+
     def get_all_cities(self):
         """Return list of all cities in the graph."""
         return list(self.cities.keys())
