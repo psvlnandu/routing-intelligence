@@ -220,105 +220,75 @@ class CityGraph:
                     for idx, place in enumerate(places_result['results'][:5]):  # Check top 5
                         try:
                             city_name = place.get('name', '').strip()
+                            place_id = place.get('place_id')
+
+                            if not place_id: continue
                             
-                            if not city_name:
-                                continue
+                            start_name = start_city.split(",")[0].strip().lower()
+                            goal_name = goal_city.split(",")[0].strip().lower() 
                             
                             print(f"      Checking: {city_name}...", end=" ")
-                            
-                            # Skip if already found
-                            if city_name in intermediate_cities:
-                                print("(duplicate)")
+                            if city_name.lower() == start_name or city_name.lower() == goal_name:
+                                print("(is start/goal city)")
                                 continue
-                            
-                            # Skip if is start or goal city
-                            start_city_name = start_city.split(",")[0].strip().lower()
-                            goal_city_name = goal_city.split(",")[0].strip().lower()
-                            
-                            if city_name.lower() == start_city_name:
-                                print("(is start city)")
-                                continue
-                            
-                            if city_name.lower() == goal_city_name:
-                                print("(is goal city)")
-                                continue
-                            
-                            # ============ TRY TO FIND IN BOTH STATES ============
-                            city_coords = None
+
+                            # Fetch full place details using place_id
+                            details_result = self.gmaps.place(
+                                place_id=place_id, 
+                                fields=['address_component']
+                            )
                             found_state = None
-                            
-                            # Try start state first
-                            full_city_name = f"{city_name}, {start_state}"
-                            city_coords = self.get_coordinates(full_city_name)
-                            if city_coords:
-                                found_state = start_state
-                            
-                            # If not in start state, try goal state
-                            if not city_coords:
-                                full_city_name = f"{city_name}, {goal_state}"
-                                city_coords = self.get_coordinates(full_city_name)
-                                if city_coords:
-                                    found_state = goal_state
-                            
-                            # If still not found, try without state (risky, but catches some cases)
-                            # if not city_coords:
-                            #     city_coords = self.get_coordinates(city_name)
-                            #     found_state = "?"
-                            # if not city_coords:
-                            #     print(f"(not in {start_state} or {goal_state}, skipping)")
-                            #     continue
-                            
-                            if not city_coords:
-                                print(f"(not found in {start_state} or {goal_state})")
-                                continue
+                            found_country = None 
+                            for component in details_result['result']['address_components']:
+                                if 'administrative_area_level_1' in component['types']:
+                                    found_state = component['short_name'].strip()
+                                if 'country' in component['types']:
+                                    found_country = component['short_name'].strip()
 
-                            full_city = f"{city_name}, {found_state}"
-                            if full_city in intermediate_cities:
-                                print(f"(duplicate)")
+                            if found_country not in ['US', 'CA']:
+                                print(f"(skipping country: {found_country})")
                                 continue
-                            
-                            city_lat, city_lon = city_coords
-                            
-                            # ============ CHECK IF ON ROUTE ============
-                            # Allow reasonable tolerance for multi-state routes
-                            # (±3 degrees ~333km for longer routes)
-                            lat_min = min(start_lat, goal_lat)
-                            lat_max = max(start_lat, goal_lat)
-                            lon_min = min(start_lon, goal_lon)
-                            lon_max = max(start_lon, goal_lon)
-                            
-                            tolerance = 3 if abs(goal_lat - start_lat) > 2 else 1
-                            
-                            lat_in_range = lat_min - tolerance <= city_lat <= lat_max + tolerance
-                            lon_in_range = lon_min - tolerance <= city_lon <= lon_max + tolerance
-                            
-                            if not (lat_in_range and lon_in_range):
-                                print(f"(off route: {city_lat:.2f},{city_lon:.2f})")
-                                continue
-                            
-                            
-                            # ============ SUCCESS: ADD TO LIST ============
-                            if found_state == "?":
-                                full_city = f"{city_name}, USA"
-                            else:
+                            # 1. Reject cities if they are neither US nor CA (e.g., Mexico, Europe)
+                            if found_country == 'CA':
+                                # E.g., Toronto, ON (CA)
+                                full_city = f"{city_name}, {found_state} (CA)"
+                            elif found_state:
+                                # E.g., Buffalo, NY
                                 full_city = f"{city_name}, {found_state}"
-
-                            # Check for duplicates (ONCE for both cases)
-                            if full_city not in intermediate_cities:
-                                intermediate_cities.append(full_city)
-                                print(f"    ✓ ADDED: {full_city}")
                             else:
-                                print(f"    (skipping duplicate: {full_city})")
-                                continue  # Skip to next search point
+                                # Fallback for places with no admin level 1 (shouldn't happen for locality)
+                                full_city = f"{city_name}, {found_country}"
                             
-                           
-                        
+                            if full_city in intermediate_cities:
+                                print(f"(duplicate: {full_city})")
+                                continue
+
+                            
+
+                            if self.add_city(full_city):
+                                city_coords = self.get_coordinates(full_city)
+                                if city_coords:
+                                    city_lat, city_lon = city_coords
+                                    lat_min, lat_max = min(start_lat, goal_lat), max(start_lat, goal_lat)
+                                    lon_min, lon_max = min(start_lon, goal_lon), max(start_lon, goal_lon)
+                                    tolerance = 3 if abs(goal_lat - start_lat) > 2 else 1
+                                    lat_in_range = lat_min - tolerance <= city_lat <= lat_max + tolerance
+                                    lon_in_range = lon_min - tolerance <= city_lon <= lon_max + tolerance
+                                    
+                                    if not (lat_in_range and lon_in_range):
+                                        print(f"(off route)")
+                                        continue
+                                    intermediate_cities.append(full_city)
+                                    print(f"    ✓ ADDED: {full_city}")
+                                    break  # Move to the next search point
+                            else:
+                                print(f"(failed to add to graph)")
                         except Exception as e:
                             print(f"(error: {str(e)[:40]})")
                             continue
                 
                 except Exception as e:
-                    print(f"  ❌ Error at search point {i}: {e}")
+                    print(f"  Error at search point {i}: {e}")
                     continue
             
             print(f"\n✅ Found {len(intermediate_cities)} intermediate cities:")
