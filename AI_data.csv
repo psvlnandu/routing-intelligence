@@ -39,27 +39,30 @@ From,To,Algorithm,Distance,Nodes Expanded,Execution Time,Path Length
 "Potsdam, NY","Phoenix, AZ",A* (Weighted),2467.2,931,31.38,6
 "Potsdam, NY","Phoenix, AZ",Greedy Best-First,2467.2,46,0.58,6
 "Potsdam, NY","Phoenix, AZ",DFS,9053.3,41,0.27,6
-"Potsdam, NY","Los Angeles, CA",A* (Manhattan),3099.5,356,6.69,6
-"Potsdam, NY","Los Angeles, CA",A* (Min Graph),3056.5,546,9.57,8
-"Potsdam, NY","Los Angeles, CA",A* (Weighted),3056.5,546,10.95,8
-"Potsdam, NY","Los Angeles, CA",Greedy Best-First,3224.4,241,20.86,5
-"Potsdam, NY","Los Angeles, CA",DFS,5374.4,25,0.23,6
-"Potsdam, NY","Seattle, WA",UCS (Dijkstra),3093.3,627,17.89,7
-"Potsdam, NY","Seattle, WA",A* (Haversine),3093.3,562,14.77,7
-"Potsdam, NY","Seattle, WA",A* (Euclidean),3093.3,308,6.78,7
-"Potsdam, NY","Seattle, WA",A* (Manhattan),3093.3,177,2.99,7
-"Potsdam, NY","Seattle, WA",A* (Min Graph),3093.3,620,14.4,7
-"Potsdam, NY","Seattle, WA",A* (Weighted),3093.3,604,49.92,7
-"Potsdam, NY","Seattle, WA",Greedy Best-First,3093.3,79,1.08,7
-"Potsdam, NY","Seattle, WA",DFS,3871.5,33,0.2,6
-"Potsdam, NY","San Jose, CA",UCS (Dijkstra),3889.9,693,19.19,6
-"Potsdam, NY","San Jose, CA",A* (Haversine),3889.9,688,32.78,6
-"Potsdam, NY","San Jose, CA",A* (Euclidean),3906.6,682,15.77,6
-"Potsdam, NY","San Jose, CA",A* (Manhattan),3906.6,675,55.8,6
-"Potsdam, NY","San Jose, CA",A* (Min Graph),3889.9,693,24.78,6
-"Potsdam, NY","San Jose, CA",A* (Weighted),3889.9,693,17.98,6
-"Potsdam, NY","San Jose, CA",Greedy Best-First,6754.1,75,1.17,6
-"Potsdam, NY","San Jose, CA",DFS,6754.1,39,0.24,6
+"Potsdam, NY","Los Angeles, CA",UCS (Dijkstra),2888.9,1017,57.77,7
+"Potsdam, NY","Los Angeles, CA",A* (Haversine),2888.9,855,57.8,7
+"Potsdam, NY","Los Angeles, CA",A* (Euclidean),2888.9,321,6.63,7
+"Potsdam, NY","Los Angeles, CA",A* (Manhattan),2931.8,393,8.2,5
+"Potsdam, NY","Los Angeles, CA",A* (Min Graph),2888.9,1009,43.63,7
+"Potsdam, NY","Los Angeles, CA",A* (Weighted),2888.9,974,34.11,7
+"Potsdam, NY","Los Angeles, CA",Greedy Best-First,4351.2,458,21.8,5
+"Potsdam, NY","Los Angeles, CA",DFS,5374.4,30,0.15,6
+"Potsdam, NY","Seattle, WA",UCS (Dijkstra),3093.3,1040,53.18,7
+"Potsdam, NY","Seattle, WA",A* (Haversine),3093.3,900,29.43,7
+"Potsdam, NY","Seattle, WA",A* (Euclidean),3093.3,592,16.01,7
+"Potsdam, NY","Seattle, WA",A* (Manhattan),3093.3,270,5.68,7
+"Potsdam, NY","Seattle, WA",A* (Min Graph),3093.3,1022,83.82,7
+"Potsdam, NY","Seattle, WA",A* (Weighted),3093.3,988,32.14,7
+"Potsdam, NY","Seattle, WA",Greedy Best-First,3093.3,49,0.64,7
+"Potsdam, NY","Seattle, WA",DFS,3871.5,35,0.19,6
+"Potsdam, NY","San Jose, CA",UCS (Dijkstra),3871.9,1065,51.33,7
+"Potsdam, NY","San Jose, CA",A* (Haversine),3889.9,1046,75.37,6
+"Potsdam, NY","San Jose, CA",A* (Euclidean),3906.6,1043,50.69,6
+"Potsdam, NY","San Jose, CA",A* (Manhattan),3906.6,1043,47.12,6
+"Potsdam, NY","San Jose, CA",A* (Min Graph),3871.9,1056,47.12,7
+"Potsdam, NY","San Jose, CA",A* (Weighted),3889.9,1056,48.57,6
+"Potsdam, NY","San Jose, CA",Greedy Best-First,6754.1,47,0.56,6
+"Potsdam, NY","San Jose, CA",DFS,5245.5,44,0.23,6
 "Potsdam, NY","Washington, DC",UCS (Dijkstra),533.3,501,14.7,6
 "Potsdam, NY","Washington, DC",A* (Haversine),533.3,244,6.91,6
 "Potsdam, NY","Washington, DC",A* (Euclidean),533.3,200,5.08,6
