@@ -192,15 +192,15 @@ def find_routes(request: RouteRequest):
         
         # Build dynamic network between cities
         print(f"\nBuilding network for {initial_city} → {goal_city}...")
-        all_cities, intermediate_cities = city_graph.build_dynamic_network(initial_city, goal_city, num_intermediate=12)  # CAPTURE intermediate_cities
+        all_cities, intermediate_cities = city_graph.build_dynamic_network(initial_city, goal_city, num_intermediate=25)  # CAPTURE intermediate_cities
         print(f'intermediate cities= {len(intermediate_cities)}')   
-        print(f'intermediate cities list= {intermediate_cities}') 
+        # print(f'intermediate cities list= {intermediate_cities}') 
         results = RouteOptimizer.run_all_algorithms(initial_city, goal_city, city_graph)
-        for algo_key, algo_result in results.items():
-            print(f"\n{algo_key.upper()}:")
-            print(f"  Path: {algo_result.path}")
-            print(f"  Expanded States: {algo_result.expanded_states}")
-            print(f"  Nodes Expanded: {algo_result.nodes_expanded}")
+        # for algo_key, algo_result in results.items():
+        #     print(f"\n{algo_key.upper()}:")
+        #     print(f"  Path: {algo_result.path}")
+        #     print(f"  Expanded States: {algo_result.expanded_states}")
+        #     print(f"  Nodes Expanded: {algo_result.nodes_expanded}")
         
     except HTTPException:
         raise

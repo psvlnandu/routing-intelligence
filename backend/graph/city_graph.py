@@ -149,7 +149,7 @@ class CityGraph:
         
       
       
-    def find_intermediate_cities(self, start_city: str, goal_city: str, num_cities: int = 10):
+    def find_intermediate_cities(self, start_city: str, goal_city: str, num_cities):
         """
         IMPROVED VERSION:
         - Extracts state from input more robustly
@@ -195,13 +195,14 @@ class CityGraph:
             print(f"  📍 Route spans: {start_state} → {goal_state}")
             
             intermediate_cities = []
+            print(f"num_cities:{num_cities}\n")
             for i in range(1, num_cities + 1):
                 try:
                     t = i / (num_cities + 1)
                     search_lat = start_lat + (goal_lat - start_lat) * t
                     search_lon = start_lon + (goal_lon - start_lon) * t
                     
-                    print(f"\n  🔎 Search point {i}/10: ({search_lat:.4f}, {search_lon:.4f})")
+                    print(f"\n  🔎 Search point {i}/{num_cities}: ({search_lat:.4f}, {search_lon:.4f})")
                     
                     # Search for cities near this point
                     places_result = self.gmaps.places_nearby(
@@ -292,8 +293,8 @@ class CityGraph:
                     continue
             
             print(f"\n✅ Found {len(intermediate_cities)} intermediate cities:")
-            for city in intermediate_cities:
-                print(f"   - {city}")
+            # for city in intermediate_cities:
+            #     print(f"   - {city}")
             
             return intermediate_cities[:num_cities]
         
@@ -304,7 +305,7 @@ class CityGraph:
             return []
 
  
-    def build_dynamic_network(self, start_city: str, goal_city: str, num_intermediate: int = 12):
+    def build_dynamic_network(self, start_city: str, goal_city: str, num_intermediate: int = 25):
         """
         Build a dynamic network by finding intermediate cities and connecting nearby ones.
         
