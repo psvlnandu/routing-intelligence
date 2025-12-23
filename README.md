@@ -1,8 +1,5 @@
 ---
 title: Route Optimization Algorithm Comparison
-emoji: 🗺️
-colorFrom: blue
-colorTo: purple
 sdk: docker
 app_file: frontend/app.py
 pinned: false
@@ -25,3 +22,19 @@ An interactive tool to visualize how UCS, A*, and Greedy Best-First search algor
 - Backend: FastAPI + Python
 - Frontend: Streamlit + Folium
 - APIs: Google Maps
+
+## How to run?
+
+- Launch <a href ="https://routing-intelligence-backend.onrender.com/">backend</a>
+
+  ```
+  # clone the repo
+  git clone repo_name
+  
+  # change directory
+  cd frontend
+
+  # run streamlit app
+  streamlit run app.py
+  ```
+    
