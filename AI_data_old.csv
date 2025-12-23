@@ -1,0 +1,97 @@
+From,To,Algorithm,Distance,Nodes Expanded,Execution Time,Path Length
+"Potsdam, NY"," Brooklyn, NY",UCS (Dijkstra),367.7,235,6.21,6
+"Potsdam, NY"," Brooklyn, NY",A* (Haversine),367.7,106,1.81,6
+"Potsdam, NY"," Brooklyn, NY",A* (Euclidean),367.7,103,1.58,6
+"Potsdam, NY"," Brooklyn, NY",A* (Manhattan),367.7,103,1.64,6
+"Potsdam, NY"," Brooklyn, NY",A* (Min Graph),367.7,182,30.19,6
+"Potsdam, NY"," Brooklyn, NY",A* (Weighted),367.7,158,3.74,6
+"Potsdam, NY"," Brooklyn, NY",Greedy Best-First,383.7,52,0.89,5
+"Potsdam, NY"," Brooklyn, NY",DFS,403.5,59,0.44,7
+"Potsdam, NY","Manhattan, NY",UCS (Dijkstra),359.2,219,6.26,5
+"Potsdam, NY","Manhattan, NY",A* (Haversine),359.2,90,1.7,5
+"Potsdam, NY","Manhattan, NY",A* (Euclidean),359.2,90,1.53,5
+"Potsdam, NY","Manhattan, NY",A* (Manhattan),359.2,90,1.51,5
+"Potsdam, NY","Manhattan, NY",A* (Min Graph),359.2,167,3.81,5
+"Potsdam, NY","Manhattan, NY",A* (Weighted),359.2,133,3.07,5
+"Potsdam, NY","Manhattan, NY",Greedy Best-First,369.4,52,0.83,5
+"Potsdam, NY","Manhattan, NY",DFS,405.6,62,0.46,7
+"Potsdam, NY","Boston, MA",UCS (Dijkstra),354.1,241,6.88,6
+"Potsdam, NY","Boston, MA",A* (Haversine),354.1,132,2.63,6
+"Potsdam, NY","Boston, MA",A* (Euclidean),354.1,44,0.61,6
+"Potsdam, NY","Boston, MA",A* (Manhattan),354.1,35,0.46,6
+"Potsdam, NY","Boston, MA",A* (Min Graph),354.1,169,3.9,6
+"Potsdam, NY","Boston, MA",A* (Weighted),354.1,138,3.24,6
+"Potsdam, NY","Boston, MA",Greedy Best-First,516.1,54,0.91,7
+"Potsdam, NY","Boston, MA",DFS,354.1,630,10.23,6
+"Potsdam, NY","Springfield, MA",UCS (Dijkstra),298.1,190,3.62,6
+"Potsdam, NY","Springfield, MA",A* (Haversine),298.1,119,1.86,6
+"Potsdam, NY","Springfield, MA",A* (Euclidean),298.1,111,1.69,6
+"Potsdam, NY","Springfield, MA",A* (Manhattan),299.2,81,1.17,6
+"Potsdam, NY","Springfield, MA",A* (Min Graph),298.1,171,3.47,6
+"Potsdam, NY","Springfield, MA",A* (Weighted),298.1,161,31.13,6
+"Potsdam, NY","Springfield, MA",Greedy Best-First,303.1,39,0.7,5
+"Potsdam, NY","Springfield, MA",DFS,1338.9,21,0.11,5
+"Potsdam, NY","Phoenix, AZ",UCS (Dijkstra),2467.2,990,81.36,6
+"Potsdam, NY","Phoenix, AZ",A* (Haversine),2467.2,698,22,6
+"Potsdam, NY","Phoenix, AZ",A* (Euclidean),2467.2,63,0.93,6
+"Potsdam, NY","Phoenix, AZ",A* (Manhattan),2467.2,46,0.67,6
+"Potsdam, NY","Phoenix, AZ",A* (Min Graph),2467.2,994,46.18,6
+"Potsdam, NY","Phoenix, AZ",A* (Weighted),2467.2,931,31.38,6
+"Potsdam, NY","Phoenix, AZ",Greedy Best-First,2467.2,46,0.58,6
+"Potsdam, NY","Phoenix, AZ",DFS,9053.3,41,0.27,6
+"Potsdam, NY","Los Angeles, CA",UCS (Dijkstra),2888.9,1017,57.77,7
+"Potsdam, NY","Los Angeles, CA",A* (Haversine),2888.9,855,57.8,7
+"Potsdam, NY","Los Angeles, CA",A* (Euclidean),2888.9,321,6.63,7
+"Potsdam, NY","Los Angeles, CA",A* (Manhattan),2931.8,393,8.2,5
+"Potsdam, NY","Los Angeles, CA",A* (Min Graph),2888.9,1009,43.63,7
+"Potsdam, NY","Los Angeles, CA",A* (Weighted),2888.9,974,34.11,7
+"Potsdam, NY","Los Angeles, CA",Greedy Best-First,4351.2,458,21.8,5
+"Potsdam, NY","Los Angeles, CA",DFS,5374.4,30,0.15,6
+"Potsdam, NY","Seattle, WA",UCS (Dijkstra),3093.3,1040,53.18,7
+"Potsdam, NY","Seattle, WA",A* (Haversine),3093.3,900,29.43,7
+"Potsdam, NY","Seattle, WA",A* (Euclidean),3093.3,592,16.01,7
+"Potsdam, NY","Seattle, WA",A* (Manhattan),3093.3,270,5.68,7
+"Potsdam, NY","Seattle, WA",A* (Min Graph),3093.3,1022,83.82,7
+"Potsdam, NY","Seattle, WA",A* (Weighted),3093.3,988,32.14,7
+"Potsdam, NY","Seattle, WA",Greedy Best-First,3093.3,49,0.64,7
+"Potsdam, NY","Seattle, WA",DFS,3871.5,35,0.19,6
+"Potsdam, NY","San Jose, CA",UCS (Dijkstra),3871.9,1065,51.33,7
+"Potsdam, NY","San Jose, CA",A* (Haversine),3889.9,1046,75.37,6
+"Potsdam, NY","San Jose, CA",A* (Euclidean),3906.6,1043,50.69,6
+"Potsdam, NY","San Jose, CA",A* (Manhattan),3906.6,1043,47.12,6
+"Potsdam, NY","San Jose, CA",A* (Min Graph),3871.9,1056,47.12,7
+"Potsdam, NY","San Jose, CA",A* (Weighted),3889.9,1056,48.57,6
+"Potsdam, NY","San Jose, CA",Greedy Best-First,6754.1,47,0.56,6
+"Potsdam, NY","San Jose, CA",DFS,5245.5,44,0.23,6
+"Potsdam, NY","Washington, DC",UCS (Dijkstra),533.3,501,14.7,6
+"Potsdam, NY","Washington, DC",A* (Haversine),533.3,244,6.91,6
+"Potsdam, NY","Washington, DC",A* (Euclidean),533.3,200,5.08,6
+"Potsdam, NY","Washington, DC",A* (Manhattan),537.5,88,1.67,6
+"Potsdam, NY","Washington, DC",A* (Min Graph),533.3,464,11.52,6
+"Potsdam, NY","Washington, DC",A* (Weighted),533.3,353,9.02,6
+"Potsdam, NY","Washington, DC",Greedy Best-First,565.8,85,1.29,6
+"Potsdam, NY","Washington, DC",DFS,565.8,35,0.2,6
+"Potsdam, NY","Philadelphia, PA",UCS (Dijkstra),417.2,501,15.81,6
+"Potsdam, NY","Philadelphia, PA",A* (Haversine),417.2,190,4.74,6
+"Potsdam, NY","Philadelphia, PA",A* (Euclidean),417.2,186,4.31,6
+"Potsdam, NY","Philadelphia, PA",A* (Manhattan),417.2,94,1.95,6
+"Potsdam, NY","Philadelphia, PA",A* (Min Graph),417.2,436,12.6,6
+"Potsdam, NY","Philadelphia, PA",A* (Weighted),417.2,276,7.48,6
+"Potsdam, NY","Philadelphia, PA",Greedy Best-First,417.2,168,3.04,6
+"Potsdam, NY","Philadelphia, PA",DFS,426.5,27,0.16,6
+"Potsdam, NY","Pittsburgh, PA",UCS (Dijkstra),487.8,552,17.35,6
+"Potsdam, NY","Pittsburgh, PA",A* (Haversine),487.8,203,5.05,6
+"Potsdam, NY","Pittsburgh, PA",A* (Euclidean),487.8,82,1.43,6
+"Potsdam, NY","Pittsburgh, PA",A* (Manhattan),492.4,43,0.66,5
+"Potsdam, NY","Pittsburgh, PA",A* (Min Graph),487.8,509,14.31,6
+"Potsdam, NY","Pittsburgh, PA",A* (Weighted),487.8,341,8.73,6
+"Potsdam, NY","Pittsburgh, PA",Greedy Best-First,492.4,43,0.61,5
+"Potsdam, NY","Pittsburgh, PA",DFS,2510.3,37,0.22,6
+"Potsdam, NY","State College, PA ",UCS (Dijkstra),370.8,531,18.58,5
+"Potsdam, NY","State College, PA ",A* (Haversine),370.8,166,4.21,5
+"Potsdam, NY","State College, PA ",A* (Euclidean),370.8,103,2.21,5
+"Potsdam, NY","State College, PA ",A* (Manhattan),370.8,41,0.63,5
+"Potsdam, NY","State College, PA ",A* (Min Graph),370.8,450,13.65,5
+"Potsdam, NY","State College, PA ",A* (Weighted),370.8,282,7.28,5
+"Potsdam, NY","State College, PA ",Greedy Best-First,370.8,63,0.94,5
+"Potsdam, NY","State College, PA ",DFS,387.7,35,0.2,5

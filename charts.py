@@ -26,13 +26,14 @@ def plot_nodes_vs_distance(csv_file):
     df = pd.read_csv(csv_file)
     
     # Define distance categories
+    
     def categorize_distance(distance):
-        if distance < 400:
-            return "Short (200-350 mi)"
-        elif distance < 700:
-            return "Medium (450-580 mi)"
+        if distance>0 and distance < 500:
+            return "Short (<500 mi)"
+        elif distance>500 and distance < 1200:
+            return "Medium (500-1200 mi)"
         else:
-            return "Long (2200-2900 mi)"
+            return "Long from 1600mi"
     
     df['Distance Category'] = df['Distance'].apply(categorize_distance)
     
